@@ -11,11 +11,24 @@
   html, body { min-height: 100%; background: #000; overflow-x: hidden; }
   body { font-family: 'MuseoModerno', sans-serif; color: #ff0000; cursor: crosshair; }
 
+  #intro {
+    position: fixed; inset: 0; z-index: 10; background: #000;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .5s ease;
+  }
+  #intro.hide { opacity: 0; pointer-events: none; }
+  #intro .logo-big {
+    font-family: 'Lexend Tera', sans-serif; font-weight: 900; color: #ff0000;
+    font-size: clamp(2rem, 9vw, 6rem); letter-spacing: .04em; text-transform: uppercase;
+    opacity: 0; transition: opacity .6s ease;
+  }
+  #intro.show-logo .logo-big { opacity: 1; }
+
   #stage { position: relative; min-height: 100vh; isolation: isolate; overflow: hidden; background: #000; }
 
   #light {
     position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background: #ff0000; opacity: 0; filter: blur(1px);
+    background: #ff0000; opacity: 0;
     clip-path: polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%);
     will-change: clip-path, opacity;
   }
@@ -37,77 +50,100 @@
   #content {
     position: relative; z-index: 2; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center;
-    padding: clamp(28px, 6vh, 64px) 20px 80px;
+    padding: clamp(24px, 5vw, 64px) clamp(14px, 4vw, 20px) clamp(48px, 8vh, 80px);
     mix-blend-mode: difference; color: #ff0000;
-    opacity: 0; transition: opacity .45s ease;
+    opacity: 0; transition: opacity .4s ease;
   }
   #content.shown { opacity: 1; }
 
-  .logo { text-align: center; margin-bottom: 14px; }
+  .back {
+    align-self: flex-start; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: inherit; text-decoration: none; padding: 6px 0; margin-bottom: 18px;
+    border-bottom: 1px dashed currentColor; opacity: .8;
+  }
+  .back:hover, .back:focus-visible { opacity: 1; border-bottom-style: solid; }
+
+  .logo { text-align: center; margin-bottom: 10px; width: 100%; }
   .logo h1 {
     font-family: 'Lexend Tera', sans-serif; font-weight: 900;
-    font-size: clamp(2rem, 7vw, 4.6rem); line-height: .86; text-transform: uppercase;
+    font-size: clamp(1.8rem, 6.5vw, 4.4rem); line-height: .9; text-transform: uppercase;
   }
   .logo h1 span { display: block; }
-  .tagline {
-    margin-top: 14px; font-size: clamp(.8rem, 2vw, 1rem);
-    letter-spacing: .18em; text-transform: uppercase;
-  }
 
-  .tabs { display: flex; gap: 10px; margin: 26px 0 28px; flex-wrap: wrap; justify-content: center; }
+  #tabs { display: none; gap: 10px; margin: 24px 0 26px; flex-wrap: wrap; justify-content: center; }
+  #tabs.shown { display: flex; }
+
   .btn {
-    padding: 10px 20px; background: transparent; color: inherit;
-    border: 1px solid currentColor; font: inherit; font-size: .85rem;
+    display: inline-block; padding: 10px 18px; background: transparent; color: inherit;
+    border: 1px solid currentColor; font: inherit; font-size: .8rem; text-align: center;
     letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
     transition: background .2s, color .2s;
   }
-  .btn:hover:not(:disabled), .btn.on { background: currentColor; color: #000; }
+  .btn:hover:not(:disabled) { background: #000; color: #ff0000; }
+  .btn.on { background: currentColor; color: #000; }
   .btn:disabled { opacity: .35; cursor: default; }
-  .btn-label { display: inline-block; }
+  :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
   .panel { display: none; width: min(860px, 100%); }
   .panel.on { display: block; }
-  .intro { font-size: .95rem; line-height: 1.5; max-width: 620px; margin: 0 auto 22px; text-align: center; letter-spacing: .02em; }
+  .intro { font-size: .92rem; line-height: 1.55; max-width: 620px; margin: 0 auto 22px; text-align: center; }
+  .steps {
+    list-style: none; max-width: 560px; margin: 0 auto 26px; font-size: .92rem; line-height: 1.5;
+  }
+  .steps li { padding: 6px 0; }
+  .steps li:not(:last-child)::after { content: "↓"; display: block; text-align: center; opacity: .6; }
   .controls { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 18px; }
 
-  #preview {
-    display: none; max-width: 100%; max-height: 52vh; margin: 8px auto 20px;
-    border: 1px solid currentColor;
+  .status {
+    font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
+    text-align: center; margin: 18px 0; min-height: 1.2em;
   }
 
+  #preview { display: none; max-width: 100%; max-height: 50vh; margin: 8px auto 20px; border: 1px solid currentColor; }
+
   #results { display: grid; gap: 12px; }
-  .card { border: 1px solid currentColor; padding: 18px; background: transparent; }
+  .card { border: 1px solid currentColor; padding: 18px; }
   .card.top { border-width: 2px; }
-  .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-  .name { font-family: 'Lexend Tera', sans-serif; font-weight: 900; font-size: 1rem; text-transform: uppercase; letter-spacing: .02em; }
-  .pct { font-size: 1.4rem; white-space: nowrap; }
+  .head { display: flex; gap: 14px; align-items: baseline; justify-content: space-between; }
+  .name {
+    flex: 1 1 auto; font-family: 'Lexend Tera', sans-serif; font-weight: 900;
+    font-size: 1rem; text-transform: uppercase; letter-spacing: .02em; overflow-wrap: anywhere;
+  }
+  .pct {
+    flex: 0 0 auto; font-family: ui-monospace, 'Cascadia Mono', monospace;
+    font-variant-numeric: tabular-nums; font-size: 1.3rem; min-width: 4.5ch; text-align: right;
+  }
   .bar { height: 3px; background: rgba(255, 0, 0, .25); margin: 10px 0 14px; }
   .bar i { display: block; height: 100%; background: currentColor; width: 0; transition: width .6s ease; }
-  .desc { font-size: .95rem; line-height: 1.5; margin-bottom: 12px; }
+  .desc { font-size: .93rem; line-height: 1.55; margin-bottom: 12px; }
   .more {
-    font: inherit; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+    font: inherit; font-size: .74rem; letter-spacing: .12em; text-transform: uppercase;
     background: none; border: none; border-bottom: 1px dashed currentColor; color: inherit; cursor: pointer; padding: 0;
   }
   .more:hover { border-bottom-style: solid; }
 
-  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: .82rem; }
-  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(255, 0, 0, .3); }
-  th { font-weight: 400; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+  .table-scroll { max-height: 58vh; overflow: auto; margin-top: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(255, 0, 0, .28); }
+  th {
+    position: sticky; top: 0; z-index: 1; background: #000;
+    font-weight: 400; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+  }
   td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .mini { display: inline-block; width: 70px; height: 3px; background: rgba(255, 0, 0, .25); vertical-align: middle; margin-right: 8px; }
+  .mini { display: inline-block; width: 56px; height: 3px; background: rgba(255, 0, 0, .25); vertical-align: middle; margin-right: 8px; }
   .mini i { display: block; height: 100%; background: currentColor; }
 
   .fb { margin-top: 22px; padding-top: 18px; border-top: 1px solid currentColor; }
-  .fb p { font-size: .9rem; margin-bottom: 12px; }
+  .fb p { font-size: .88rem; margin-bottom: 12px; }
   .fb select {
     background: #000; color: #ff0000; border: 1px solid currentColor; padding: 9px 10px;
-    font: inherit; font-size: .9rem; max-width: 100%;
+    font: inherit; font-size: .88rem; max-width: 100%;
   }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .note { font-size: .8rem; line-height: 1.5; margin-top: 16px; opacity: .85; }
+  .note { font-size: .78rem; line-height: 1.55; margin-top: 16px; opacity: .85; }
 
   #log {
-    font-family: ui-monospace, 'Cascadia Mono', monospace; font-size: .8rem; white-space: pre-wrap;
+    font-family: ui-monospace, 'Cascadia Mono', monospace; font-size: .78rem; white-space: pre-wrap;
     border: 1px solid currentColor; padding: 14px; max-height: 340px; overflow: auto; margin-top: 16px;
   }
   input[type=file][hidden] { display: none; }
@@ -116,33 +152,50 @@
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   @media (max-width: 600px) {
-    .btn { padding: 9px 14px; font-size: .75rem; }
-    .head { flex-direction: column; gap: 4px; }
+    #content { padding: 20px 14px 56px; }
+    .back { font-size: .66rem; margin-bottom: 14px; }
+    .btn { padding: 10px 13px; font-size: .72rem; }
+    .intro, .steps { font-size: .86rem; }
+    .card { padding: 14px; }
+    .name { font-size: .88rem; }
+    .pct { font-size: 1.1rem; min-width: 4ch; }
+    th, td { padding: 6px 5px; font-size: .74rem; }
+    .mini { width: 36px; }
+    .table-scroll { max-height: 64vh; }
   }
 </style>
 </head>
 <body>
 
+<div id="intro"><div class="logo-big">DARK ROOM</div></div>
+
 <div id="stage">
   <div id="light"></div>
 
   <div id="content">
+    <a class="back" href="./">← Dark Room Archive</a>
+
     <header class="logo">
       <h1><span>Film</span><span>Identifier</span></h1>
-      <div class="tagline">where analog meets algorithm</div>
     </header>
 
-    <nav class="tabs">
+    <nav id="tabs">
       <button id="tabDetect" class="btn on">Identify</button>
       <button id="tabSetup" class="btn">Setup</button>
     </nav>
 
     <section id="panelDetect" class="panel on">
-      <p class="intro">Upload a frame. The archive compares its colour, contrast and grain with the film profiles and shows the two closest matches.</p>
+      <ol class="steps">
+        <li>Upload a photo.</li>
+        <li>DARK ROOM compares its colour, contrast and grain with the archive film profiles.</li>
+        <li>You get the two closest film matches, with the reasons why.</li>
+        <li>Sure the match is wrong? Pick the correct film and press Save. This helps DARK ROOM learn.</li>
+      </ol>
       <div class="controls">
-        <label class="btn" for="photo">Choose a frame</label>
+        <label class="btn" for="photo">Choose a photo</label>
         <input id="photo" type="file" accept="image/*" hidden>
       </div>
+      <p id="status" class="status" aria-live="polite"></p>
       <canvas id="preview"></canvas>
       <div id="results"></div>
     </section>
@@ -171,6 +224,8 @@
   var SIZE = 256;
   var HUE_BINS = 12;
   var K_NEIGHBOURS = 7;
+
+  var SETUP_MODE = new URLSearchParams(window.location.search).has('setup');
 
   var CLOSED_CLIP = 'polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%)';
   var OPEN_CLIP = 'polygon(2cm 0, calc(4cm + 12%) 0, 100% calc(100% - 6cm), 110% 115%, -10% 115%, 0 100%)';
@@ -413,45 +468,56 @@
   var $ = function (id) { return document.getElementById(id); };
   var light = $('light');
   var content = $('content');
+  var intro = $('intro');
   var profiles = null;
   var approvedExamples = [];
   var lastVector = null;
-  var busy = false;
-  var doorAnim = null;
+  var lightAnim = null;
+  var switching = false;
 
   function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
 
   function playDoor(direction, duration) {
     var closing = direction === 'close';
-    if (doorAnim) doorAnim.cancel();
-    doorAnim = light.animate(closing ? CLOSE_FRAMES : OPEN_FRAMES, {
+    if (lightAnim) lightAnim.cancel();
+    lightAnim = light.animate(closing ? CLOSE_FRAMES : OPEN_FRAMES, {
       duration: duration,
       easing: closing ? 'cubic-bezier(.45, 0, .55, 1)' : 'cubic-bezier(.2, .72, .2, 1)',
       fill: 'forwards'
     });
-    return doorAnim.finished;
+    return lightAnim.finished;
   }
 
-  function setContentVisible(visible) {
-    content.classList.toggle('shown', visible);
+  function setContentVisible(visible) { content.classList.toggle('shown', visible); }
+
+  async function runIntro() {
+    await wait(100);
+    intro.classList.add('show-logo');
+    await wait(1600);
+    intro.classList.add('hide');
+    await wait(500);
+    intro.style.display = 'none';
+    await playDoor('close', 1500);
+    await playDoor('open', 1800);
+    setContentVisible(true);
   }
 
   async function withDoor(change) {
-    if (busy) return;
-    busy = true;
+    if (switching) return;
+    switching = true;
     setContentVisible(false);
-    await wait(450);
-    await playDoor('close', 1600);
+    await wait(400);
+    await playDoor('close', 1500);
     await change();
-    await wait(300);
-    await playDoor('open', 2000);
+    await wait(250);
+    await playDoor('open', 1800);
     setContentVisible(true);
-    busy = false;
+    switching = false;
   }
 
   function switchTab(detect) {
-    if (busy) return;
-    if (($('panelDetect').classList.contains('on')) === detect) return;
+    if (switching) return;
+    if ($('panelDetect').classList.contains('on') === detect) return;
     withDoor(function () {
       $('tabDetect').classList.toggle('on', detect);
       $('tabSetup').classList.toggle('on', !detect);
@@ -460,8 +526,13 @@
     });
   }
 
-  $('tabDetect').addEventListener('click', function () { switchTab(true); });
-  $('tabSetup').addEventListener('click', function () { switchTab(false); });
+  if (SETUP_MODE) {
+    $('tabs').classList.add('shown');
+    $('tabDetect').addEventListener('click', function () { switchTab(true); });
+    $('tabSetup').addEventListener('click', function () { switchTab(false); });
+  }
+
+  function setStatus(text) { $('status').textContent = text; }
 
   function supabaseHeaders(extra) {
     var h = { apikey: SUPABASE_KEY };
@@ -505,30 +576,45 @@
     });
   }
 
-  $('photo').addEventListener('change', async function (event) {
+  $('photo').addEventListener('change', function (event) {
     var file = event.target.files && event.target.files[0];
     if (!file) return;
-    var obj;
-    try { obj = await loadFile(file); }
-    catch (e) { showMessage('Could not open this file.'); return; }
 
-    lastVector = featuresOfImage(obj.img);
-    var canvas = $('preview');
-    var k = Math.min(1, 420 / Math.max(obj.img.width, obj.img.height));
-    canvas.width = Math.round(obj.img.width * k);
-    canvas.height = Math.round(obj.img.height * k);
-    canvas.getContext('2d').drawImage(obj.img, 0, 0, canvas.width, canvas.height);
-    URL.revokeObjectURL(obj.url);
+    setStatus('Analyzing frame…');
 
-    withDoor(function () {
-      canvas.style.display = 'block';
-      renderResults();
+    requestAnimationFrame(function () {
+      setTimeout(function () {
+        loadFile(file).then(function (obj) {
+          var vector = featuresOfImage(obj.img);
+          var canvas = $('preview');
+          var k = Math.min(1, 420 / Math.max(obj.img.width, obj.img.height));
+          canvas.width = Math.round(obj.img.width * k);
+          canvas.height = Math.round(obj.img.height * k);
+          canvas.getContext('2d').drawImage(obj.img, 0, 0, canvas.width, canvas.height);
+          canvas.style.display = 'block';
+          URL.revokeObjectURL(obj.url);
+
+          lastVector = vector;
+          setStatus('');
+          renderResults();
+        }).catch(function () {
+          setStatus('');
+          showMessage('Could not open this file.');
+        });
+      }, 40);
     });
   });
 
   function showMessage(text) {
-    $('results').innerHTML = '<div class="card"><p class="desc"></p></div>';
-    $('results').querySelector('.desc').textContent = text;
+    var box = $('results');
+    box.innerHTML = '';
+    var card = document.createElement('div');
+    card.className = 'card';
+    var p = document.createElement('p');
+    p.className = 'desc';
+    p.textContent = text;
+    card.appendChild(p);
+    box.appendChild(card);
   }
 
   function renderResults() {
@@ -579,17 +665,19 @@
         var btn = document.createElement('button');
         btn.className = 'more';
         btn.textContent = 'Show details';
+        btn.setAttribute('aria-expanded', 'false');
         card.appendChild(btn);
 
-        var table = document.createElement('div');
-        table.style.display = 'none';
-        table.appendChild(buildTable(cls));
-        card.appendChild(table);
+        var wrap = document.createElement('div');
+        wrap.style.display = 'none';
+        wrap.appendChild(buildTable(cls));
+        card.appendChild(wrap);
 
         btn.addEventListener('click', function () {
-          var open = table.style.display !== 'none';
-          table.style.display = open ? 'none' : 'block';
+          var open = wrap.style.display !== 'none';
+          wrap.style.display = open ? 'none' : 'block';
           btn.textContent = open ? 'Show details' : 'Hide details';
+          btn.setAttribute('aria-expanded', open ? 'false' : 'true');
         });
       }
 
@@ -620,6 +708,9 @@
   }
 
   function buildTable(cls) {
+    var scroll = document.createElement('div');
+    scroll.className = 'table-scroll';
+
     var table = document.createElement('table');
     var head = document.createElement('tr');
     head.innerHTML = '<th>Feature</th><th>Film</th><th>Your frame</th><th>Match</th>';
@@ -645,7 +736,9 @@
     foot.innerHTML = '<td><b>Average match</b></td><td></td><td></td>' +
       '<td class="num"><b>' + (count ? (sum / count).toFixed(0) : '—') + '%</b></td>';
     table.appendChild(foot);
-    return table;
+
+    scroll.appendChild(table);
+    return scroll;
   }
 
   function buildFeedbackBlock(ranked) {
@@ -666,6 +759,7 @@
     row.appendChild(yes);
 
     var select = document.createElement('select');
+    select.setAttribute('aria-label', 'Choose the correct film');
     select.appendChild(new Option('No, it is a different film…', ''));
     profiles.classes.forEach(function (c) {
       select.appendChild(new Option((DESCRIPTIONS[c.label] || {}).title || c.label, c.label));
@@ -681,6 +775,7 @@
 
     var msg = document.createElement('p');
     msg.className = 'note';
+    msg.setAttribute('aria-live', 'polite');
     wrap.appendChild(msg);
 
     function submit(label) {
@@ -716,142 +811,142 @@
 
   var logBox = $('log');
   function log(text) {
+    if (!logBox) return;
     logBox.textContent += '\n' + text;
     logBox.scrollTop = logBox.scrollHeight;
   }
 
-  $('build').addEventListener('click', async function () {
-    var files = $('dir').files;
-    if (!files || !files.length) { log('Please choose the photos folder first.'); return; }
-    $('build').disabled = true;
-    logBox.textContent = 'Starting analysis...';
+  if (SETUP_MODE) {
+    $('build').addEventListener('click', async function () {
+      var files = $('dir').files;
+      if (!files || !files.length) { log('Please choose the photos folder first.'); return; }
+      $('build').disabled = true;
+      logBox.textContent = 'Starting analysis...';
 
-    try {
-      var items = [], seen = 0;
-      for (var fi = 0; fi < files.length; fi++) {
-        var file = files[fi];
-        if (!/\.(jpe?g|png|webp)$/i.test(file.name)) continue;
-        seen++;
-        if (seen % 25 === 0) log('processed ' + seen + '...');
-        var obj;
-        try { obj = await loadFile(file); }
-        catch (e) { log('skipped ' + file.name + ': ' + e.message); continue; }
-        try { items.push({ label: labelOf(file.name), v: Array.from(featuresOfImage(obj.img)) }); }
-        catch (e) { log('error ' + file.name + ': ' + e.message); }
-        URL.revokeObjectURL(obj.url);
-      }
-
-      if (!items.length) { log('No photos found.'); return; }
-
-      var byLabel = {};
-      items.forEach(function (it) {
-        if (!byLabel[it.label]) byLabel[it.label] = [];
-        byLabel[it.label].push(it.v);
-      });
-
-      var allVectors = items.map(function (it) { return it.v; });
-      var gMean = meanVec(allVectors);
-      var gStd = stdVec(allVectors, gMean);
-
-      var labels = Object.keys(byLabel).sort();
-      var classes = labels.map(function (label) {
-        var vectors = byLabel[label];
-        var mean = meanVec(vectors);
-        return { label: label, count: vectors.length, mean: mean, std: stdVec(vectors, mean) };
-      });
-
-      var pooled = new Array(gMean.length).fill(0), total = 0;
-      classes.forEach(function (c) {
-        for (var i = 0; i < c.std.length; i++) pooled[i] += c.std[i] * c.std[i] * c.count;
-        total += c.count;
-      });
-      var weight = pooled.map(function (v) {
-        var s = Math.sqrt(v / Math.max(1, total));
-        return s < 1e-9 ? 1 : s;
-      });
-
-      var exampleList = items.map(function (it) {
-        return { label: it.label, v: it.v.map(function (x) { return Math.round(x * 10000) / 10000; }) };
-      });
-
-      var prof = {
-        version: 3,
-        images: items.length,
-        mean: gMean,
-        std: gStd,
-        weight: weight,
-        classes: classes,
-        examples: exampleList
-      };
-
-      var top1 = 0, top2 = 0, perClass = {};
-      for (var a = 0; a < exampleList.length; a++) {
-        var probe = exampleList[a];
-        var others = [];
-        for (var b = 0; b < exampleList.length; b++) {
-          if (b === a) continue;
-          others.push({ label: exampleList[b].label, d: distance(probe.v, exampleList[b].v, weight) });
+      try {
+        var items = [], seen = 0;
+        for (var fi = 0; fi < files.length; fi++) {
+          var file = files[fi];
+          if (!/\.(jpe?g|png|webp)$/i.test(file.name)) continue;
+          seen++;
+          if (seen % 25 === 0) log('processed ' + seen + '...');
+          var obj;
+          try { obj = await loadFile(file); }
+          catch (e) { log('skipped ' + file.name + ': ' + e.message); continue; }
+          try { items.push({ label: labelOf(file.name), v: Array.from(featuresOfImage(obj.img)) }); }
+          catch (e) { log('error ' + file.name + ': ' + e.message); }
+          URL.revokeObjectURL(obj.url);
         }
-        others.sort(function (x, y) { return x.d - y.d; });
-        var near = others.slice(0, K_NEIGHBOURS), votes = {}, tot = 0;
-        near.forEach(function (s) {
-          var w = 1 / (s.d + 1e-6);
-          votes[s.label] = (votes[s.label] || 0) + w;
-          tot += w;
+
+        if (!items.length) { log('No photos found.'); return; }
+
+        var byLabel = {};
+        items.forEach(function (it) {
+          if (!byLabel[it.label]) byLabel[it.label] = [];
+          byLabel[it.label].push(it.v);
         });
-        var best = null, bestP = -1;
-        Object.keys(votes).forEach(function (k) {
-          if (votes[k] / tot > bestP) { bestP = votes[k] / tot; best = k; }
+
+        var allVectors = items.map(function (it) { return it.v; });
+        var gMean = meanVec(allVectors);
+        var gStd = stdVec(allVectors, gMean);
+
+        var labels = Object.keys(byLabel).sort();
+        var classes = labels.map(function (label) {
+          var vectors = byLabel[label];
+          var mean = meanVec(vectors);
+          return { label: label, count: vectors.length, mean: mean, std: stdVec(vectors, mean) };
         });
-        if (best === probe.label) top1++;
-        if (near.slice(0, 2).some(function (s) { return s.label === probe.label; })) top2++;
-        var rec = perClass[probe.label] || { ok: 0, n: 0 };
-        rec.n++;
-        if (best === probe.label) rec.ok++;
-        perClass[probe.label] = rec;
+
+        var pooled = new Array(gMean.length).fill(0), total = 0;
+        classes.forEach(function (c) {
+          for (var i = 0; i < c.std.length; i++) pooled[i] += c.std[i] * c.std[i] * c.count;
+          total += c.count;
+        });
+        var weight = pooled.map(function (v) {
+          var s = Math.sqrt(v / Math.max(1, total));
+          return s < 1e-9 ? 1 : s;
+        });
+
+        var exampleList = items.map(function (it) {
+          return { label: it.label, v: it.v.map(function (x) { return Math.round(x * 10000) / 10000; }) };
+        });
+
+        var prof = {
+          version: 3,
+          images: items.length,
+          mean: gMean,
+          std: gStd,
+          weight: weight,
+          classes: classes,
+          examples: exampleList
+        };
+
+        var top1 = 0, top2 = 0, perClass = {};
+        for (var a = 0; a < exampleList.length; a++) {
+          var probe = exampleList[a];
+          var others = [];
+          for (var b = 0; b < exampleList.length; b++) {
+            if (b === a) continue;
+            others.push({ label: exampleList[b].label, d: distance(probe.v, exampleList[b].v, weight) });
+          }
+          others.sort(function (x, y) { return x.d - y.d; });
+          var near = others.slice(0, K_NEIGHBOURS), votes = {}, tot = 0;
+          near.forEach(function (s) {
+            var w = 1 / (s.d + 1e-6);
+            votes[s.label] = (votes[s.label] || 0) + w;
+            tot += w;
+          });
+          var best = null, bestP = -1;
+          Object.keys(votes).forEach(function (k) {
+            if (votes[k] / tot > bestP) { bestP = votes[k] / tot; best = k; }
+          });
+          if (best === probe.label) top1++;
+          if (near.slice(0, 2).some(function (s) { return s.label === probe.label; })) top2++;
+          var rec = perClass[probe.label] || { ok: 0, n: 0 };
+          rec.n++;
+          if (best === probe.label) rec.ok++;
+          perClass[probe.label] = rec;
+        }
+
+        prof.accuracy = {
+          top1: top1 / exampleList.length,
+          top2: top2 / exampleList.length,
+          tested: exampleList.length
+        };
+
+        profiles = prof;
+        $('download').disabled = false;
+
+        log('');
+        log('Photos: ' + items.length + ', films: ' + classes.length);
+        log('Top match correct: ' + Math.round(prof.accuracy.top1 * 100) + '%');
+        log('Film in top two: ' + Math.round(prof.accuracy.top2 * 100) + '%');
+        log('');
+        log('By film:');
+        labels.forEach(function (label) {
+          log('  ' + label + ': ' + perClass[label].ok + '/' + perClass[label].n);
+        });
+        log('');
+        log('Done. Click "Download profiles.json".');
+      } catch (e) {
+        log('Error: ' + e.message);
+      } finally {
+        $('build').disabled = false;
       }
+    });
 
-      prof.accuracy = {
-        top1: top1 / exampleList.length,
-        top2: top2 / exampleList.length,
-        tested: exampleList.length
-      };
+    $('download').addEventListener('click', function () {
+      if (!profiles) return;
+      var blob = new Blob([JSON.stringify(profiles)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'profiles.json';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    });
+  }
 
-      profiles = prof;
-      $('download').disabled = false;
-
-      log('');
-      log('Photos: ' + items.length + ', films: ' + classes.length);
-      log('Top match correct: ' + Math.round(prof.accuracy.top1 * 100) + '%');
-      log('Film in top two: ' + Math.round(prof.accuracy.top2 * 100) + '%');
-      log('');
-      log('By film:');
-      labels.forEach(function (label) {
-        log('  ' + label + ': ' + perClass[label].ok + '/' + perClass[label].n);
-      });
-      log('');
-      log('Done. Click "Download profiles.json".');
-    } catch (e) {
-      log('Error: ' + e.message);
-    } finally {
-      $('build').disabled = false;
-    }
-  });
-
-  $('download').addEventListener('click', function () {
-    if (!profiles) return;
-    var blob = new Blob([JSON.stringify(profiles)], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'profiles.json';
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-  });
-
-  setTimeout(function () {
-    setContentVisible(true);
-    playDoor('open', 3100);
-  }, 400);
+  runIntro();
 })();
 </script>
 </body>
