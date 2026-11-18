@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Определитель плёнки</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; min-height: 100vh; background: #080000; color: #ffb3b3;
+    font-family: 'MuseoModerno', system-ui, sans-serif; line-height: 1.5;
+  }
+  h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: .12em; text-transform: uppercase; color: #ff0000; }
+  .sub { margin: 0 0 18px; font-size: 13px; color: #a05050; max-width: 680px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .tabs button {
+    padding: 8px 16px; background: transparent; color: #ff5050; border: 1px solid #520000;
+    font: inherit; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
+  }
+  .tabs button.on { border-color: #ff0000; color: #fff; background: #2a0000; }
+  .panel { display: none; max-width: 800px; }
+  .panel.on { display: block; }
+  input[type=file] { color: #ff8080; font-size: 13px; max-width: 100%; margin-bottom: 14px; }
+  button.act {
+    padding: 9px 16px; background: transparent; color: #ff3030; border: 1px solid #ff0000;
+    font: inherit; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; cursor: pointer;
+  }
+  button.act:hover:not(:disabled) { background: #ff0000; color: #000; }
+  button.act:disabled { opacity: .35; cursor: default; }
+  canvas { max-width: 100%; margin: 12px 0; border: 1px solid #3a0000; display: none; }
+  .card { border: 1px solid #3a0000; padding: 14px; margin-bottom: 10px; background: #100000; }
+  .card.top { border-color: #ff0000; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .name { font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: #ff5050; }
+  .card.top .name { color: #fff; }
+  .pct { font-size: 16px; color: #ff8080; white-space: nowrap; }
+  .bar { height: 3px; background: #2a0000; margin: 8px 0 12px; }
+  .bar i { display: block; height: 100%; background: #ff0000; width: 0; transition: width .45s; }
+  .desc { margin: 0 0 10px; font-size: 13.5px; color: #cf9090; }
+  .more {
+    font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #ff4040;
+    background: none; border: none; border-bottom: 1px dashed #800000; cursor: pointer; padding: 0; font-family: inherit;
+  }
+  .more:hover { color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12.5px; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid #240000; }
+  th { color: #804040; font-weight: 400; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  td.num { text-align: right; color: #b07070; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.m { width: 130px; }
+  .mini { height: 3px; background: #2a0000; display: inline-block; width: 70px; vertical-align: middle; margin-right: 6px; }
+  .mini i { display: block; height: 100%; background: #ff0000; }
+  .fb { margin-top: 18px; padding-top: 14px; border-top: 1px solid #2a0000; }
+  .fb p { margin: 0 0 10px; font-size: 13px; color: #c07070; }
+  .fb select {
+    background: #140000; color: #ff8080; border: 1px solid #520000; padding: 8px;
+    font-family: inherit; font-size: 13px; max-width: 100%;
+  }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .note { font-size: 12px; color: #8a5050; margin-top: 16px; max-width: 660px; }
+  #log {
+    font-family: ui-monospace, 'Cascadia Mono', monospace; font-size: 12px; white-space: pre-wrap;
+    background: #120000; border: 1px solid #3a0000; padding: 12px; max-height: 320px; overflow: auto;
+    color: #ff9d9d; margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Определитель плёнки</h1>
+<p class="sub">Загрузите кадр — страница сравнит его с профилями плёнок из архива и покажет две ближайшие.</p>
+
+<div class="tabs">
+  <button id="tabDetect" class="on">Определить</button>
+  <button id="tabSetup">Настроить</button>
+</div>
+
+<div id="panelDetect" class="panel on">
+  <input id="photo" type="file" accept="image/*">
+  <canvas id="preview"></canvas>
+  <div id="results"></div>
+</div>
+
+<div id="panelSetup" class="panel">
+  <p class="sub">Один раз выберите папку <b>photos</b>. Название плёнки берётся из имени файла.</p>
+  <input id="dir" type="file" webkitdirectory directory multiple>
+  <div class="row" style="margin-bottom:10px">
+    <button id="build" class="act">Собрать профили</button>
+    <button id="download" class="act" disabled>Скачать profiles.json</button>
+  </div>
+  <div id="log">Ожидание папки...</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SUPABASE_URL = 'https://nkpshevllvvcobmtaebn.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_V_227IpZlEWDO3n1Jol7Lg_E2Eqmqg2';
+  var SIZE = 256;
+  var HUE_BINS = 12;
+  var K_NEIGHBOURS = 7;
+
+  var META = [
+    ['meanR', 'Средний красный канал'],
+    ['meanG', 'Средний зелёный канал'],
+    ['meanB', 'Средний синий канал'],
+    ['meanY', 'Средняя яркость'],
+    ['stdY', 'Контраст (разброс яркости)'],
+    ['meanSat', 'Средняя насыщенность'],
+    ['stdSat', 'Разброс насыщенности'],
+    ['p05', 'Тени (5-й перцентиль)'],
+    ['p50', 'Средние тона'],
+    ['p95', 'Света (95-й перцентиль)'],
+    ['clipHigh', 'Доля пересветов'],
+    ['clipLow', 'Доля провалов в чёрное'],
+    ['rgShadow', 'Сдвиг R–G в тенях'],
+    ['byShadow', 'Сдвиг жёлтое–синее в тенях'],
+    ['rgMid', 'Сдвиг R–G в средних тонах'],
+    ['byMid', 'Сдвиг жёлтое–синее в средних'],
+    ['rgHigh', 'Сдвиг R–G в светах'],
+    ['byHigh', 'Сдвиг жёлтое–синее в светах'],
+    ['colorfulness', 'Цветность'],
+    ['grain', 'Зерно (лог. энергия)'],
+    ['hue0', 'Оттенки 0–30° красный'],
+    ['hue1', 'Оттенки 30–60° оранжевый'],
+    ['hue2', 'Оттенки 60–90° жёлтый'],
+    ['hue3', 'Оттенки 90–120° жёлто-зелёный'],
+    ['hue4', 'Оттенки 120–150° зелёный'],
+    ['hue5', 'Оттенки 150–180° зелёно-бирюзовый'],
+    ['hue6', 'Оттенки 180–210° бирюзовый'],
+    ['hue7', 'Оттенки 210–240° голубой'],
+    ['hue8', 'Оттенки 240–270° синий'],
+    ['hue9', 'Оттенки 270–300° фиолетовый'],
+    ['hue10', 'Оттенки 300–330° пурпурный'],
+    ['hue11', 'Оттенки 330–360° малиновый'],
+    ['warmCool', 'Тепло–холодность (R–B)'],
+    ['satHigh', 'Доля ярко-насыщенных пикселей']
+  ];
+
+  var PERCENT_FEATURES = { clipHigh: 1, clipLow: 1, satHigh: 1, meanSat: 1, stdSat: 1 };
+  for (var hi = 0; hi < HUE_BINS; hi++) PERCENT_FEATURES['hue' + hi] = 1;
+
+  var DESCRIPTIONS = {
+    'kodak-colorplus-200': { title: 'Kodak ColorPlus 200', text: 'Бюджетная плёнка с тёплым жёлто-оранжевым сдвигом и мягкими тенями. Цвета плотные, но не агрессивные, кожа выходит с лёгкой теплотой. Зерно заметное и крупное, контраст умеренный.' },
+    'kodak-gold-200': { title: 'Kodak Gold 200', text: 'Золотистые света и насыщенные тёплые оттенки кожи — её визитная карточка. Контраст средний, света легко уходят в желтизну, тени остаются тёплыми. Зерно ровное, среднее.' },
+    'kodak-ultramax-400': { title: 'Kodak UltraMax 400', text: 'Более насыщенная и контрастная, чем ColorPlus, с красно-оранжевым сдвигом. Зерно средне-крупное, цвета плотные, тени глубокие.' },
+    'kodak-vision': { title: 'Kodak Vision (кино)', text: 'Киношная плёнка со сдержанными, чуть холодными цветами и чистыми светами. Зерно мелкое, контраст низкий, диапазон широкий.' },
+    'kodak-trix-400': { title: 'Kodak Tri-X 400', text: 'Классическая чёрно-белая плёнка с выраженным характерным зерном. Контраст высокий, тени глубокие и плотные.' },
+    'ilford-hp5-plus': { title: 'Ilford HP5 Plus', text: 'Чёрно-белая плёнка мягче Tri-X, с пластичным средним зерном. Контраст средний, света тянутся хорошо.' },
+    'kentmere-400': { title: 'Kentmere 400', text: 'Доступная чёрно-белая плёнка с заметным зерном и нейтральным тоном. Контраст средне-высокий.' },
+    'fomapan-200': { title: 'Fomapan 200', text: 'Чёрно-белая плёнка с плотными средними тонами и мелко-средним зерном. Контраст выше среднего.' },
+    'fujifilm-400': { title: 'Fujifilm 400', text: 'Заметно холоднее Kodak: зелёно-голубой сдвиг, особенно в тенях. Зерно среднее, контраст средний.' },
+    'fujicolor-c200': { title: 'Fujicolor C200', text: 'Спокойные, слегка зеленоватые нейтрали и мягкий контраст. Зерно мелкое.' },
+    'portra-400': { title: 'Kodak Portra 400', text: 'Пастельные, очень мягкие оттенки кожи и деликатное мелкое зерно. Контраст низкий, диапазон широкий.' },
+    'lucky-400': { title: 'Lucky 400', text: 'Плотные, чуть грязноватые цвета и крупное зерно. Контраст высокий, тени жёсткие.' },
+    'lucky-aerial': { title: 'Lucky Aerial', text: 'Низкая насыщенность и зеленоватый сдвиг, мелкое зерно. Контраст низкий, кадры выглядят бледно и графично.' },
+    'filmneverdie-sora-200': { title: 'FilmNeverDie Sora 200', text: 'Чистые, слегка холодные цвета и воздушные света. Зерно мелкое, контраст мягкий.' },
+    'filmneverdie-suibo-500t': { title: 'FilmNeverDie Suibo 500T', text: 'Киношный баланс: холодные тени и тёплые света. Зерно мелкое, контраст средний.' }
+  };
+
+  function hueOf(r, g, b) {
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (d < 1e-6) return -1;
+    var h;
+    if (mx === r) h = ((g - b) / d) % 6;
+    else if (mx === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h /= 6;
+    return h < 0 ? h + 1 : h;
+  }
+
+  function featuresFromPixels(data, w, h) {
+    var n = w * h;
+    var Y = new Float32Array(n), S = new Float32Array(n), Hs = new Float32Array(n);
+    var mR = 0, mG = 0, mB = 0, i, r, g, b;
+
+    for (i = 0; i < n; i++) {
+      r = data[i * 4] / 255; g = data[i * 4 + 1] / 255; b = data[i * 4 + 2] / 255;
+      mR += r; mG += g; mB += b;
+      Y[i] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      S[i] = mx > 1e-6 ? (mx - mn) / mx : 0;
+      Hs[i] = hueOf(r, g, b);
+    }
+    mR /= n; mG /= n; mB /= n;
+
+    var mY = 0, mS = 0;
+    for (i = 0; i < n; i++) { mY += Y[i]; mS += S[i]; }
+    mY /= n; mS /= n;
+
+    var vY = 0, vS = 0;
+    for (i = 0; i < n; i++) {
+      var dy = Y[i] - mY; vY += dy * dy;
+      var ds = S[i] - mS; vS += ds * ds;
+    }
+    var stdY = Math.sqrt(vY / n), stdS = Math.sqrt(vS / n);
+
+    var BINS = 64, hist = new Uint32Array(BINS);
+    for (i = 0; i < n; i++) hist[Math.min(BINS - 1, Math.floor(Y[i] * BINS))]++;
+    function pct(p) {
+      var target = p * n, acc = 0;
+      for (var q = 0; q < BINS; q++) { acc += hist[q]; if (acc >= target) return (q + 0.5) / BINS; }
+      return 1;
+    }
+
+    var clipHi = 0, clipLo = 0, satHi = 0;
+    var rgS = 0, byS = 0, rgM = 0, byM = 0, rgH = 0, byH = 0;
+    var nS = 0, nM = 0, nH = 0, sRG = 0, sBY = 0, sumRG = 0, sumBY = 0;
+
+    for (i = 0; i < n; i++) {
+      r = data[i * 4] / 255; g = data[i * 4 + 1] / 255; b = data[i * 4 + 2] / 255;
+      var y = Y[i];
+      if (y > 0.97) clipHi++;
+      if (y < 0.03) clipLo++;
+      if (S[i] > 0.45) satHi++;
+      var rg = r - g, by = (r + g) / 2 - b;
+      sumRG += rg; sumBY += by;
+      sRG += rg * rg; sBY += by * by;
+      if (y < 1 / 3) { rgS += rg; byS += by; nS++; }
+      else if (y < 2 / 3) { rgM += rg; byM += by; nM++; }
+      else { rgH += rg; byH += by; nH++; }
+    }
+
+    var meanRG = sumRG / n, meanBY = sumBY / n;
+    var stdRG = Math.sqrt(Math.max(0, sRG / n - meanRG * meanRG));
+    var stdBY = Math.sqrt(Math.max(0, sBY / n - meanBY * meanBY));
+    var colorfulness = Math.sqrt(stdRG * stdRG + stdBY * stdBY) +
+      0.3 * Math.sqrt(meanRG * meanRG + meanBY * meanBY);
+
+    var hue = new Float64Array(HUE_BINS), hueSum = 0;
+    for (i = 0; i < n; i++) {
+      if (Hs[i] < 0) continue;
+      var hb = Math.min(HUE_BINS - 1, Math.floor(Hs[i] * HUE_BINS));
+      hue[hb] += S[i]; hueSum += S[i];
+    }
+    if (hueSum > 0) for (i = 0; i < HUE_BINS; i++) hue[i] /= hueSum;
+
+    var gs = 0, gq = 0, gn = 0;
+    for (var yy = 1; yy < h - 1; yy++) {
+      for (var xx = 1; xx < w - 1; xx++) {
+        var idx = yy * w + xx, acc = 0;
+        for (var dy2 = -1; dy2 <= 1; dy2++)
+          for (var dx2 = -1; dx2 <= 1; dx2++) acc += Y[idx + dy2 * w + dx2];
+        var hp = Y[idx] - acc / 9;
+        gs += hp; gq += hp * hp; gn++;
+      }
+    }
+    var gMean = gn ? gs / gn : 0;
+    var gVar = gn ? Math.max(0, gq / gn - gMean * gMean) : 0;
+    var grain = Math.log10(Math.max(1e-6, Math.sqrt(gVar)));
+
+    var out = [
+      mR, mG, mB, mY, stdY, mS, stdS,
+      pct(0.05), pct(0.5), pct(0.95), clipHi / n, clipLo / n,
+      nS ? rgS / nS : 0, nS ? byS / nS : 0,
+      nM ? rgM / nM : 0, nM ? byM / nM : 0,
+      nH ? rgH / nH : 0, nH ? byH / nH : 0,
+      colorfulness, grain
+    ];
+    for (i = 0; i < HUE_BINS; i++) out.push(hue[i]);
+    out.push(mR - mB, satHi / n);
+    return out;
+  }
+
+  function featuresOfImage(img) {
+    var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    var k = Math.min(1, SIZE / Math.max(iw, ih));
+    var w = Math.max(1, Math.round(iw * k)), h = Math.max(1, Math.round(ih * k));
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    var ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, w, h);
+    return featuresFromPixels(ctx.getImageData(0, 0, w, h).data, w, h);
+  }
+
+  function labelOf(name) {
+    return String(name).replace(/\.[^.]+$/, '').replace(/^\d+[-_ ]*/, '')
+      .toLowerCase().replace(/colorpluse/g, 'colorplus')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  function meanVec(list) {
+    var out = new Array(list[0].length).fill(0), i, j, v;
+    for (i = 0; i < list.length; i++) { v = list[i]; for (j = 0; j < v.length; j++) out[j] += v[j]; }
+    for (j = 0; j < out.length; j++) out[j] /= list.length;
+    return out;
+  }
+
+  function stdVec(list, mean) {
+    var out = new Array(mean.length).fill(0), i, j, v, d;
+    for (i = 0; i < list.length; i++) {
+      v = list[i];
+      for (j = 0; j < v.length; j++) { d = v[j] - mean[j]; out[j] += d * d; }
+    }
+    for (j = 0; j < out.length; j++) out[j] = Math.sqrt(out[j] / Math.max(1, list.length));
+    return out;
+  }
+
+  function distance(a, b, weight) {
+    var d2 = 0, w, dz;
+    for (var i = 0; i < a.length; i++) {
+      w = Math.abs(weight[i]) < 1e-6 ? 1 : weight[i];
+      dz = (a[i] - b[i]) / w;
+      d2 += dz * dz;
+    }
+    return Math.sqrt(d2);
+  }
+
+  function predict(v, prof, examples) {
+    var scored = examples.map(function (e) {
+      return { label: e.label, d: distance(v, e.v, prof.weight) };
+    }).sort(function (a, b) { return a.d - b.d; });
+
+    var near = scored.slice(0, Math.min(K_NEIGHBOURS, scored.length));
+    var votes = {}, total = 0, i;
+    for (i = 0; i < near.length; i++) {
+      var wgt = 1 / (near[i].d + 1e-6);
+      votes[near[i].label] = (votes[near[i].label] || 0) + wgt;
+      total += wgt;
+    }
+
+    var counts = {};
+    examples.forEach(function (e) { counts[e.label] = (counts[e.label] || 0) + 1; });
+    var labels = Object.keys(counts);
+
+    var raw = labels.map(function (label) {
+      var vote = (votes[label] || 0) / (total || 1);
+      var prior = counts[label] / examples.length;
+      return { label: label, s: vote + 0.25 * prior };
+    });
+    var sum = 0;
+    for (i = 0; i < raw.length; i++) sum += raw[i].s;
+    raw.forEach(function (r) { r.p = r.s / (sum || 1); });
+    raw.sort(function (a, b) { return b.p - a.p; });
+    return raw;
+  }
+
+  function matchScore(value, mean, sd, globalSd) {
+    var s = Math.max(sd, 0.15 * globalSd, 1e-6);
+    var z = (value - mean) / s;
+    return 100 * Math.exp(-0.5 * Math.pow(z / 1.5, 2));
+  }
+
+  function formatValue(name, value) {
+    if (PERCENT_FEATURES[name]) return (value * 100).toFixed(1) + '%';
+    return value.toFixed(3);
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var profiles = null;
+  var approvedExamples = [];
+  var lastVector = null;
+  var lastRanked = null;
+
+  $('tabDetect').addEventListener('click', function () { switchTab(true); });
+  $('tabSetup').addEventListener('click', function () { switchTab(false); });
+
+  function switchTab(detect) {
+    $('tabDetect').classList.toggle('on', detect);
+    $('tabSetup').classList.toggle('on', !detect);
+    $('panelDetect').classList.toggle('on', detect);
+    $('panelSetup').classList.toggle('on', !detect);
+  }
+
+  function supabaseHeaders(extra) {
+    var h = { apikey: SUPABASE_KEY };
+    if (extra) for (var k in extra) h[k] = extra[k];
+    return h;
+  }
+
+  function loadApproved() {
+    var url = SUPABASE_URL + '/rest/v1/feedback?select=label,features&status=eq.approved&limit=10000';
+    return fetch(url, { headers: supabaseHeaders() })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (rows) {
+        approvedExamples = rows
+          .filter(function (row) { return Array.isArray(row.features) && row.features.length === 34; })
+          .map(function (row) { return { label: row.label, v: row.features }; });
+      })
+      .catch(function () { approvedExamples = []; });
+  }
+
+  function loadProfiles() {
+    return fetch('profiles.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (data && data.classes) profiles = data; })
+      .catch(function () {});
+  }
+
+  Promise.all([loadProfiles(), loadApproved()]);
+
+  function allExamples() {
+    var base = profiles && profiles.examples ? profiles.examples : [];
+    return base.concat(approvedExamples);
+  }
+
+  $('photo').addEventListener('change', function (event) {
+    var file = event.target.files && event.target.files[0];
+    if (!file) return;
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      var canvas = $('preview');
+      var k = Math.min(1, 420 / Math.max(img.width, img.height));
+      canvas.width = Math.round(img.width * k);
+      canvas.height = Math.round(img.height * k);
+      canvas.style.display = 'block';
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      lastVector = featuresOfImage(img);
+      renderResults();
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      $('results').innerHTML = '<div class="card"><p class="desc">Не удалось открыть файл.</p></div>';
+    };
+    img.src = url;
+  });
+
+  function renderResults() {
+    var box = $('results');
+    if (!profiles) {
+      box.innerHTML = '<div class="card"><p class="desc">Профили не найдены. Откройте вкладку «Настроить», ' +
+        'соберите profiles.json и положите рядом с этой страницей.</p></div>';
+      return;
+    }
+    if (!lastVector) return;
+
+    var examples = allExamples();
+    var ranked = predict(lastVector, profiles, examples);
+    lastRanked = ranked;
+    box.innerHTML = '';
+
+    ranked.slice(0, 2).forEach(function (item, index) {
+      var info = DESCRIPTIONS[item.label] || {};
+      var cls = null;
+      profiles.classes.forEach(function (c) { if (c.label === item.label) cls = c; });
+      var pct = item.p * 100;
+
+      var card = document.createElement('div');
+      card.className = 'card' + (index === 0 ? ' top' : '');
+
+      var head = document.createElement('div');
+      head.className = 'head';
+      head.innerHTML = '<span class="name">' + (info.title || item.label) + '</span>' +
+        '<span class="pct">' + pct.toFixed(0) + '%</span>';
+      card.appendChild(head);
+
+      var bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.innerHTML = '<i style="width:' + pct.toFixed(1) + '%"></i>';
+      card.appendChild(bar);
+
+      var desc = document.createElement('p');
+      desc.className = 'desc';
+      desc.textContent = info.text || 'Описание для этой плёнки пока не добавлено.';
+      card.appendChild(desc);
+
+      if (cls) {
+        var btn = document.createElement('button');
+        btn.className = 'more';
+        btn.textContent = 'Подробнее';
+        card.appendChild(btn);
+
+        var table = document.createElement('div');
+        table.style.display = 'none';
+        table.appendChild(buildTable(cls));
+        card.appendChild(table);
+
+        btn.addEventListener('click', function () {
+          var open = table.style.display !== 'none';
+          table.style.display = open ? 'none' : 'block';
+          btn.textContent = open ? 'Подробнее' : 'Свернуть';
+        });
+      }
+
+      box.appendChild(card);
+    });
+
+    if (ranked.length > 2) {
+      var rest = document.createElement('p');
+      rest.className = 'note';
+      rest.textContent = 'Остальные варианты: ' + ranked.slice(2, 5).map(function (s) {
+        var d = DESCRIPTIONS[s.label];
+        return (d ? d.title : s.label) + ' ' + (s.p * 100).toFixed(0) + '%';
+      }).join(' · ');
+      box.appendChild(rest);
+    }
+
+    if (profiles.accuracy) {
+      var acc = document.createElement('p');
+      acc.className = 'note';
+      acc.textContent = 'Проверка на архиве: первый вариант совпал в ' +
+        Math.round(profiles.accuracy.top1 * 100) + '% кадров, плёнка попала в два первых — в ' +
+        Math.round(profiles.accuracy.top2 * 100) + '%. Одобренных ответов посетителей в базе: ' +
+        approvedExamples.length + '.';
+      box.appendChild(acc);
+    }
+
+    box.appendChild(buildFeedbackBlock(ranked));
+  }
+
+  function buildTable(cls) {
+    var table = document.createElement('table');
+    var head = document.createElement('tr');
+    head.innerHTML = '<th>Характеристика</th><th>У плёнки</th><th>У снимка</th><th>Совпадение</th>';
+    table.appendChild(head);
+
+    var sum = 0, count = 0, i;
+    for (i = 0; i < META.length; i++) {
+      var name = META[i][0], title = META[i][1];
+      var value = lastVector[i];
+      var score = matchScore(value, cls.mean[i], cls.std[i], profiles.std[i]);
+      sum += score; count++;
+
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + title + '</td>' +
+        '<td class="num">' + formatValue(name, cls.mean[i]) + '</td>' +
+        '<td class="num">' + formatValue(name, value) + '</td>' +
+        '<td class="num m"><span class="mini"><i style="width:' + score.toFixed(0) + '%"></i></span>' +
+        score.toFixed(0) + '%</td>';
+      table.appendChild(tr);
+    }
+
+    var foot = document.createElement('tr');
+    foot.innerHTML = '<td><b>Среднее соответствие</b></td><td></td><td></td>' +
+      '<td class="num"><b>' + (count ? (sum / count).toFixed(0) : '—') + '%</b></td>';
+    table.appendChild(foot);
+    return table;
+  }
+
+  function buildFeedbackBlock(ranked) {
+    var wrap = document.createElement('div');
+    wrap.className = 'fb';
+
+    var q = document.createElement('p');
+    q.textContent = 'Это верно? Ответ отправится на проверку. Он повлияет на прогноз после одобрения.';
+    wrap.appendChild(q);
+
+    var row = document.createElement('div');
+    row.className = 'row';
+
+    var topTitle = (DESCRIPTIONS[ranked[0].label] || {}).title || ranked[0].label;
+    var yes = document.createElement('button');
+    yes.className = 'act';
+    yes.textContent = 'Да, это ' + topTitle;
+    row.appendChild(yes);
+
+    var select = document.createElement('select');
+    select.appendChild(new Option('Нет, это другая плёнка…', ''));
+    profiles.classes.forEach(function (c) {
+      select.appendChild(new Option((DESCRIPTIONS[c.label] || {}).title || c.label, c.label));
+    });
+    row.appendChild(select);
+
+    var send = document.createElement('button');
+    send.className = 'act';
+    send.textContent = 'Сохранить';
+    row.appendChild(send);
+
+    wrap.appendChild(row);
+
+    var msg = document.createElement('p');
+    msg.className = 'note';
+    wrap.appendChild(msg);
+
+    function submit(label) {
+      yes.disabled = true; send.disabled = true;
+      msg.textContent = 'Отправка...';
+      sendFeedback(label, lastVector).then(function () {
+        msg.textContent = 'Спасибо. Ответ отправлен на проверку и появится в прогнозе после одобрения.';
+      }).catch(function (e) {
+        msg.textContent = 'Не удалось отправить: ' + e.message;
+        yes.disabled = false; send.disabled = false;
+      });
+    }
+
+    yes.addEventListener('click', function () { submit(ranked[0].label); });
+    send.addEventListener('click', function () {
+      if (!select.value) { msg.textContent = 'Выберите плёнку в списке.'; return; }
+      submit(select.value);
+    });
+
+    return wrap;
+  }
+
+  function sendFeedback(label, v) {
+    var features = v.map(function (x) { return Math.round(x * 10000) / 10000; });
+    return fetch(SUPABASE_URL + '/rest/v1/feedback', {
+      method: 'POST',
+      headers: supabaseHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+      body: JSON.stringify({ label: label, features: features, status: 'pending' })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+    });
+  }
+
+  var logBox = $('log');
+  function log(text) {
+    logBox.textContent += '\n' + text;
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () { resolve({ img: img, url: url }); };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('не открывается')); };
+      img.src = url;
+    });
+  }
+
+  $('build').addEventListener('click', async function () {
+    var files = $('dir').files;
+    if (!files || !files.length) { log('Сначала выберите папку photos.'); return; }
+    $('build').disabled = true;
+    logBox.textContent = 'Начинаю анализ...';
+
+    try {
+      var items = [], seen = 0;
+      for (var fi = 0; fi < files.length; fi++) {
+        var file = files[fi];
+        if (!/\.(jpe?g|png|webp)$/i.test(file.name)) continue;
+        seen++;
+        if (seen % 25 === 0) log('обработано ' + seen + '...');
+        var obj;
+        try { obj = await loadImage(file); }
+        catch (e) { log('пропуск ' + file.name + ': ' + e.message); continue; }
+        try { items.push({ label: labelOf(file.name), v: Array.from(featuresOfImage(obj.img)) }); }
+        catch (e) { log('ошибка ' + file.name + ': ' + e.message); }
+        URL.revokeObjectURL(obj.url);
+      }
+
+      if (!items.length) { log('Фото не найдены.'); return; }
+
+      var byLabel = {};
+      items.forEach(function (it) {
+        if (!byLabel[it.label]) byLabel[it.label] = [];
+        byLabel[it.label].push(it.v);
+      });
+
+      var allVectors = items.map(function (it) { return it.v; });
+      var gMean = meanVec(allVectors);
+      var gStd = stdVec(allVectors, gMean);
+
+      var labels = Object.keys(byLabel).sort();
+      var classes = labels.map(function (label) {
+        var vectors = byLabel[label];
+        var mean = meanVec(vectors);
+        return { label: label, count: vectors.length, mean: mean, std: stdVec(vectors, mean) };
+      });
+
+      var pooled = new Array(gMean.length).fill(0), total = 0;
+      classes.forEach(function (c) {
+        for (var i = 0; i < c.std.length; i++) pooled[i] += c.std[i] * c.std[i] * c.count;
+        total += c.count;
+      });
+      var weight = pooled.map(function (v) {
+        var s = Math.sqrt(v / Math.max(1, total));
+        return s < 1e-9 ? 1 : s;
+      });
+
+      var exampleList = items.map(function (it) {
+        return { label: it.label, v: it.v.map(function (x) { return Math.round(x * 10000) / 10000; }) };
+      });
+
+      var prof = {
+        version: 3,
+        images: items.length,
+        mean: gMean,
+        std: gStd,
+        weight: weight,
+        classes: classes,
+        examples: exampleList
+      };
+
+      var top1 = 0, top2 = 0, perClass = {};
+      for (var a = 0; a < exampleList.length; a++) {
+        var probe = exampleList[a];
+        var others = [];
+        for (var b = 0; b < exampleList.length; b++) {
+          if (b === a) continue;
+          others.push({ label: exampleList[b].label, d: distance(probe.v, exampleList[b].v, weight) });
+        }
+        others.sort(function (x, y) { return x.d - y.d; });
+        var near = others.slice(0, K_NEIGHBOURS), votes = {}, tot = 0;
+        near.forEach(function (s) {
+          var w = 1 / (s.d + 1e-6);
+          votes[s.label] = (votes[s.label] || 0) + w;
+          tot += w;
+        });
+        var best = null, bestP = -1;
+        Object.keys(votes).forEach(function (k) {
+          if (votes[k] / tot > bestP) { bestP = votes[k] / tot; best = k; }
+        });
+        if (best === probe.label) top1++;
+        if (near.slice(0, 2).some(function (s) { return s.label === probe.label; })) top2++;
+        var rec = perClass[probe.label] || { ok: 0, n: 0 };
+        rec.n++;
+        if (best === probe.label) rec.ok++;
+        perClass[probe.label] = rec;
+      }
+
+      prof.accuracy = {
+        top1: top1 / exampleList.length,
+        top2: top2 / exampleList.length,
+        tested: exampleList.length
+      };
+
+      profiles = prof;
+      $('download').disabled = false;
+
+      log('');
+      log('Фотографий: ' + items.length + ', плёнок: ' + classes.length);
+      log('Первый вариант угадан: ' + Math.round(prof.accuracy.top1 * 100) + '%');
+      log('Плёнка в двух первых: ' + Math.round(prof.accuracy.top2 * 100) + '%');
+      log('');
+      log('По плёнкам:');
+      labels.forEach(function (label) {
+        log('  ' + label + ': ' + perClass[label].ok + '/' + perClass[label].n);
+      });
+      log('');
+      log('Готово. Нажмите «Скачать profiles.json».');
+    } catch (e) {
+      log('Ошибка: ' + e.message);
+    } finally {
+      $('build').disabled = false;
+    }
+  });
+
+  $('download').addEventListener('click', function () {
+    if (!profiles) return;
+    var blob = new Blob([JSON.stringify(profiles)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'profiles.json';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  });
+})();
+</script>
+</body>
+</html>
