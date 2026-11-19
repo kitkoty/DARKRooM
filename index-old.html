@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <title>Darkroom</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="stage">
+    <div id="light-source" aria-hidden="true"></div>
+
+    <div id="hero">
+      <h1 class="logo-box" aria-label="DARK RooM">
+        <span class="logo-line" aria-hidden="true"><span>D</span><span>A</span><span>R</span><span>K</span></span>
+        <span class="logo-line" aria-hidden="true"><span>R</span><span>o</span><span>o</span><span>M</span></span>
+      </h1>
+      <div id="tagline" aria-label="where analog meets algorithm"></div>
+    </div>
+
+    <div id="transition-text" class="hidden">Make a step into the <span class="transition-dark">DARK ROOM</span></div>
+
+    <div id="click-prompt" class="hidden">Click it</div>
+
+    <section id="selection-menu" class="hidden" aria-live="polite">
+      <h2 id="menu-question">Which film do you want to look at?</h2>
+
+      <div class="step" id="step-color">
+        <button class="film-btn" type="button" data-type="color">Color</button>
+        <button class="film-btn" type="button" data-type="bw">Black &amp; White</button>
+      </div>
+
+      <div class="step hidden" id="step-film">
+        <div class="film-group hidden" id="films-color">
+          <button class="film-btn" type="button" data-film="kodak-colorplus-200">Kodak ColorPlus 200</button>
+          <button class="film-btn" type="button" data-film="kodak-gold-200">Kodak Gold 200</button>
+          <button class="film-btn" type="button" data-film="kodak-ultramax-400">Kodak UltraMax 400</button>
+          <button class="film-btn" type="button" data-film="fujicolor-c200">Fujicolor C200</button>
+          <button class="film-btn" type="button" data-film="portra-400">Portra 400</button>
+          <button class="film-btn" type="button" data-film="fujifilm-400">Fujifilm 400</button>
+          <button class="film-btn" type="button" data-film="kodak-vision">Kodak Vision</button>
+          <button class="film-btn" type="button" data-film="filmneverdie-sora-200">FilmNeverDie Sora 200</button>
+          <button class="film-btn" type="button" data-film="filmneverdie-suibo-500t">FilmNeverDie Suibo 500T</button>
+        </div>
+
+        <div class="film-group hidden" id="films-bw">
+          <button class="film-btn" type="button" data-film="kentmere-400">Kentmere 400</button>
+          <button class="film-btn" type="button" data-film="lucky-400">Lucky 400</button>
+          <button class="film-btn" type="button" data-film="lucky-aerial">Lucky Aerial</button>
+          <button class="film-btn" type="button" data-film="fomapan-200">Fomapan 200</button>
+          <button class="film-btn" type="button" data-film="kodak-trix-400">Kodak Tri-X 400</button>
+          <button class="film-btn" type="button" data-film="ilford-hp5-plus">Ilford HP5 Plus</button>
+        </div>
+      </div>
+    </section>
+
+    <button id="go-back" class="hidden" type="button">Go Back</button>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
