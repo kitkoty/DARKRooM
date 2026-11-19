@@ -667,9 +667,6 @@
 
   /* ---------- катушка ---------- */
 
-  function easeInOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
-  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
-
   function rollFilm() {
     if (!stripViewport || !frames) return;
 
@@ -687,39 +684,27 @@
 
     var setW = frames.scrollWidth / 4;
     if (setW <= 0) return;
-    var startPos = 3 * setW;
 
-    var segments = [
-      { dur: 600, ease: function (t) { return t; } },
-      { dur: 1300, ease: easeInOut },
-      { dur: 2600, ease: easeOut }
-    ];
-    var total = segments.reduce(function (sum, s) { return sum + s.dur; }, 0);
+    var distance = 3 * setW;
+    var duration = 2200;
     var t0 = null;
 
-    stripViewport.scrollLeft = startPos;
+    stripViewport.scrollLeft = distance;
+
+    function progress(t) {
+      var SPLIT = 0.55;
+      var COVER = 0.68;
+      if (t <= SPLIT) return (t / SPLIT) * COVER;
+      var u = (t - SPLIT) / (1 - SPLIT);
+      return COVER + (1 - COVER) * (1 - Math.pow(1 - u, 1.75));
+    }
 
     function step(ts) {
       if (t0 === null) t0 = ts;
-      var el = ts - t0;
-      var elapsed = 0, pos = 0;
-
-      for (var i = 0; i < segments.length; i++) {
-        var seg = segments[i];
-        if (el < elapsed + seg.dur) {
-          pos = i * setW + seg.ease((el - elapsed) / seg.dur) * setW;
-          break;
-        }
-        elapsed += seg.dur;
-        pos = (i + 1) * setW;
-      }
-
-      if (el >= total) {
-        stripViewport.scrollLeft = 0;
-        return;
-      }
-      stripViewport.scrollLeft = startPos - pos;
-      requestAnimationFrame(step);
+      var p = Math.min(1, (ts - t0) / duration);
+      stripViewport.scrollLeft = distance * (1 - progress(p));
+      if (p < 1) requestAnimationFrame(step);
+      else stripViewport.scrollLeft = 0;
     }
     requestAnimationFrame(step);
   }
