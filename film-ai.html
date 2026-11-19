@@ -1144,6 +1144,7 @@
     profiles.classes.forEach(function (c) {
       select.appendChild(new Option((DESCRIPTIONS[c.label] || {}).title || c.label, c.label));
     });
+    if (!digitalCase) select.appendChild(new Option('Digital photo', DIGITAL_LABEL));
     row.appendChild(select);
 
     var send = document.createElement('button');
