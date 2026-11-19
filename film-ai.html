@@ -10,7 +10,7 @@
   html, body { min-height: 100%; background: #000; overflow-x: hidden; }
   body { font-family: 'MuseoModerno', sans-serif; color: #ff0000; cursor: crosshair; }
 
-  /* ---------- ЗАСТАВКА (как в архиве) ---------- */
+  /* ---------- ЗАСТАВКА ---------- */
 
   #intro {
     position: fixed; inset: 0; z-index: 40; background: #000;
@@ -125,16 +125,17 @@
   .big-btn:hover, .big-btn:focus-visible { background: #ff0000; color: #000; }
   :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
-  .archive-wrap { position: relative; align-self: flex-start; margin-bottom: 20px; }
+  .archive-wrap { align-self: flex-start; margin-bottom: 20px; }
   .archive-note {
-    position: absolute; top: calc(100% + 10px); left: 0; z-index: 6;
-    width: min(430px, 84vw); padding: 14px 16px;
-    background: #000; border: 1px solid currentColor;
-    font-size: .86rem; line-height: 1.5; text-align: left;
-    opacity: 0; visibility: hidden; transition: opacity .2s ease;
+    max-height: 0; overflow: hidden; opacity: 0; margin-top: 0;
+    width: min(520px, 100%);
+    font-size: 1.02rem; line-height: 1.6; text-align: left;
+    transition: max-height .45s ease, opacity .3s ease, margin-top .45s ease;
   }
+  .archive-note p + p { margin-top: 12px; }
+  .archive-note a { color: inherit; }
   .archive-wrap:hover .archive-note,
-  .archive-wrap:focus-within .archive-note { opacity: 1; visibility: visible; }
+  .archive-wrap:focus-within .archive-note { max-height: 400px; opacity: 1; margin-top: 12px; }
 
   .btn {
     display: inline-block; padding: 10px 18px; background: transparent; color: inherit;
@@ -164,19 +165,24 @@
   .howto { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
   .howto-head {
-    font-family: 'Lexend Tera', sans-serif; font-weight: 900; text-transform: uppercase;
-    font-size: clamp(1.5rem, 4.6vw, 3rem); letter-spacing: .04em; text-align: center;
-    margin: clamp(30px, 8vh, 90px) 0; opacity: 0; transition: opacity .55s ease;
+    font-family: 'MuseoModerno', sans-serif; font-weight: 400;
+    font-size: clamp(1.1rem, 5.4vw, 5rem);
+    line-height: 1.1; letter-spacing: .02em;
+    text-align: center; white-space: nowrap; text-transform: uppercase;
+    margin: clamp(30px, 8vh, 90px) 0;
+    opacity: 0;
+    transition:
+      opacity .5s ease,
+      font-size 1s cubic-bezier(.3, .7, .2, 1),
+      transform 1s cubic-bezier(.3, .7, .2, 1),
+      margin 1s cubic-bezier(.3, .7, .2, 1);
+    will-change: font-size, transform;
   }
   .howto-head.shown { opacity: 1; }
+  .howto-head.final { font-size: clamp(.95rem, 3.1vw, 2rem); margin: 0 0 18px; }
 
-  .howto-body { display: none; width: 100%; margin-top: 14px; }
+  .howto-body { display: none; width: 100%; margin-top: 4px; }
   .howto-body.shown { display: block; }
-  .howto-title {
-    font-family: 'Lexend Tera', sans-serif; font-weight: 900; text-transform: uppercase;
-    font-size: clamp(1rem, 2.5vw, 1.6rem); letter-spacing: .03em;
-    text-align: center; margin: 0 0 18px;
-  }
 
   .filmstrip { width: 100%; border: 2px solid currentColor; overflow: hidden; }
   .perf {
@@ -253,14 +259,20 @@
   .mini { display: inline-block; width: 56px; height: 3px; background: rgba(255, 0, 0, .25); vertical-align: middle; margin-right: 8px; }
   .mini i { display: block; height: 100%; background: currentColor; }
 
-  .fb { margin-top: 22px; padding-top: 18px; border-top: 1px solid currentColor; width: 100%; }
-  .fb p { font-size: .88rem; margin-bottom: 12px; }
-  .fb select {
-    background: #000; color: #ff0000; border: 1px solid currentColor; padding: 9px 10px;
-    font: inherit; font-size: .88rem; max-width: 100%;
-  }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .note { font-size: .78rem; line-height: 1.55; margin-top: 16px; opacity: .85; }
+  .note.other { font-size: 1.02rem; line-height: 1.5; opacity: 1; margin-top: 22px; }
+
+  .fb { margin-top: 26px; padding-top: 20px; border-top: 1px solid currentColor; width: 100%; }
+  .fb p.q { font-size: 1.12rem; line-height: 1.5; margin-bottom: 16px; }
+  .fb select {
+    background: #000; color: #ff0000; border: 1px solid currentColor; padding: 14px 12px;
+    font: inherit; font-size: .95rem; max-width: 100%;
+  }
+  .fb .btn { padding: 14px 22px; font-size: .95rem; letter-spacing: .08em; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  .divider { border: none; border-top: 1px solid currentColor; margin: 30px 0 14px; width: 100%; }
+  .learned { font-size: .82rem; letter-spacing: .04em; opacity: .85; width: 100%; }
 
   #log {
     font-family: ui-monospace, 'Cascadia Mono', monospace; font-size: .78rem; white-space: pre-wrap;
@@ -275,13 +287,19 @@
     #content { padding: 20px 14px 56px; }
     .big-btn { width: 100%; max-width: 330px; font-size: 1rem; padding: 16px 18px; }
     .archive-wrap { align-self: center; }
+    .archive-note { font-size: .95rem; }
     .frame { flex: 0 0 84%; min-height: 230px; padding: 28px 16px; }
+    .frame p { font-size: 1.05rem; }
     .card { padding: 14px; }
     .name { font-size: .88rem; }
     .pct { font-size: 1.1rem; min-width: 4ch; }
     th, td { padding: 6px 5px; font-size: .74rem; }
     .mini { width: 36px; }
     .table-scroll { max-height: 64vh; }
+    .note.other { font-size: .95rem; }
+    .fb p.q { font-size: 1rem; }
+    .fb .btn { padding: 13px 16px; font-size: .88rem; }
+    .fb select { padding: 13px 10px; font-size: .88rem; }
   }
 </style>
 </head>
@@ -303,7 +321,10 @@
   <div id="content">
     <div class="archive-wrap">
       <a class="big-btn" href="./">Dark Room Archive</a>
-      <p class="archive-note">Browse the archive: see how each film looks and the photos other DARK ROOM users chose to share. Want your shots there too? Email them to dark.room.mgz@gmail.com</p>
+      <div class="archive-note">
+        <p>Browse the archive — see how each film type looks like. Take a look at other DARK ROOM users' photos who decided to share their shots.</p>
+        <p>Do you want to share your shots so that everyone can see them? Email your photos to <a href="mailto:dark.room.mgz@gmail.com">dark.room.mgz@gmail.com</a></p>
+      </div>
     </div>
 
     <header class="logo">
@@ -320,7 +341,6 @@
         <p class="howto-head" id="howtoHead">How to use DARK ROOM ?</p>
 
         <div class="howto-body" id="howtoBody">
-          <h2 class="howto-title">How to use DARK ROOM</h2>
           <div class="filmstrip">
             <div class="perf" aria-hidden="true"></div>
             <div class="strip-viewport" id="stripViewport">
@@ -639,7 +659,7 @@
 
   function setContentVisible(visible) { content.classList.toggle('shown', visible); }
 
-  /* ---------- инструкция ---------- */
+  /* ---------- катушка ---------- */
 
   function rollFilm() {
     if (!stripViewport || !frames) return;
@@ -653,41 +673,53 @@
       frames.dataset.cloned = '1';
     }
 
-    var start = stripViewport.scrollWidth - stripViewport.clientWidth;
-    if (start <= 8) return;
+    var maxScroll = stripViewport.scrollWidth - stripViewport.clientWidth;
+    if (maxScroll <= 8) return;
 
-    var duration = 2400;
+    var duration = 4200;
     var t0 = null;
-    stripViewport.scrollLeft = start;
+    stripViewport.scrollLeft = maxScroll;
 
-    function ease(t) { return 1 - Math.pow(1 - t, 3.4); }
+    function ease(t) { return 1 - Math.pow(1 - t, 4.2); }
 
     function step(ts) {
       if (t0 === null) t0 = ts;
       var p = Math.min(1, (ts - t0) / duration);
-      stripViewport.scrollLeft = start * (1 - ease(p));
+      stripViewport.scrollLeft = maxScroll * (1 - ease(p));
       if (p < 1) requestAnimationFrame(step);
+      else stripViewport.scrollLeft = 0;
     }
     requestAnimationFrame(step);
   }
+
+  /* ---------- инструкция ---------- */
 
   async function runHowTo() {
     if (howToStarted) return;
     howToStarted = true;
 
-    await wait(450);
+    await wait(400);
+
+    var rect = howtoHead.getBoundingClientRect();
+    var shift = Math.round((window.innerHeight / 2) - (rect.top + rect.height / 2));
+    howtoHead.style.transform = 'translateY(' + shift + 'px)';
     howtoHead.classList.add('shown');
-    await wait(1600);
-    howtoHead.classList.remove('shown');
-    await wait(520);
-    howtoHead.style.display = 'none';
+
+    await wait(1500);
+
+    howtoHead.classList.add('final');
+    howtoHead.style.transform = 'translateY(0px)';
+
+    await wait(1050);
 
     howtoBody.classList.add('shown');
     controls.classList.add('shown');
 
-    await wait(140);
+    await wait(120);
     rollFilm();
   }
+
+  /* ---------- заставка ---------- */
 
   var introRunning = true;
 
@@ -912,7 +944,7 @@
 
     if (ranked.length > 2) {
       var rest = document.createElement('p');
-      rest.className = 'note';
+      rest.className = 'note other';
       rest.textContent = 'Other matches: ' + ranked.slice(2, 5).map(function (s) {
         var d = DESCRIPTIONS[s.label];
         return (d ? d.title : s.label) + ' ' + (s.p * 100).toFixed(0) + '%';
@@ -920,17 +952,17 @@
       box.appendChild(rest);
     }
 
-    if (profiles.accuracy) {
-      var acc = document.createElement('p');
-      acc.className = 'note';
-      acc.textContent = 'Archive check: the top match was correct in ' +
-        Math.round(profiles.accuracy.top1 * 100) + '% of frames, and the film was in the top two in ' +
-        Math.round(profiles.accuracy.top2 * 100) + '%. Approved visitor answers in the database: ' +
-        approvedExamples.length + '.';
-      box.appendChild(acc);
-    }
+    var fb = buildFeedbackBlock(ranked);
+    box.appendChild(fb);
 
-    box.appendChild(buildFeedbackBlock(ranked));
+    var divider = document.createElement('hr');
+    divider.className = 'divider';
+    box.appendChild(divider);
+
+    var learned = document.createElement('p');
+    learned.className = 'learned';
+    learned.textContent = 'Learned by visitor answers in the database: ' + approvedExamples.length;
+    box.appendChild(learned);
   }
 
   function buildTable(cls) {
@@ -972,6 +1004,7 @@
     wrap.className = 'fb';
 
     var q = document.createElement('p');
+    q.className = 'q';
     q.textContent = 'Is this correct? Your answer will be reviewed and affects predictions after approval.';
     wrap.appendChild(q);
 
