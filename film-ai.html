@@ -91,7 +91,7 @@
   #transition-text.visible { animation: textAppear .5s ease-out forwards; }
   @keyframes textAppear { from { opacity: 0; filter: blur(7px); } to { opacity: 1; filter: blur(0); } }
   .transition-dark { display: inline-block; font-weight: 900; letter-spacing: .06em; }
-  #transition-text.visible .transition-dark { animation: flashlightShadow 3.5s .5s forwards; }
+  #transition-text.visible .transition-dark { animation: flashlightShadow 1.4s .2s forwards; }
   @keyframes flashlightShadow {
     0% { text-shadow: 0 0 0 rgba(0, 0, 0, 0); animation-timing-function: linear; }
     20% { animation-timing-function: cubic-bezier(.3, .45, .45, 1); text-shadow: -.03em .04em .03em rgba(0, 0, 0, .7), -.05em .07em .06em rgba(0, 0, 0, .35), -.07em .1em .09em rgba(0, 0, 0, .15); }
@@ -137,6 +137,9 @@
   }
   .film-btn:hover, .film-btn:focus-visible { background: #ff0000; color: #000; transform: translateY(-2px); outline: none; }
 
+  #selection-menu.closing { mix-blend-mode: normal; color: #000; }
+  #selection-menu.closing #menu-question { color: #000; }
+  #selection-menu.closing .film-btn { color: #000; border-color: #000; }
   #selection-menu {
     position: absolute; z-index: 10; top: 50%; left: 50%;
     width: min(92%, 1000px); max-height: 84vh; overflow-y: auto;
@@ -389,7 +392,7 @@
 
     <div id="add-wrap" class="hidden">
       <button id="add-archive" class="film-btn" type="button">Add to archive</button>
-      <div class="tip">Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#e58184978ecb978a8a88cb88829fa58288848c89cb868a88"><span class="__cf_email__" data-cfemail="53373221387d213c3c3e7d3e342913343e323a3f7d303c3e">[email&#160;protected]</span></a></div>
+      <div class="tip">Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#791d180b12570b16161457141e03391e14181015571a1614"><span class="__cf_email__" data-cfemail="254144574e0b574a4a480b48425f654248444c490b464a48">[email&#160;protected]</span></a></div>
     </div>
 
     <button id="go-back" class="hidden" type="button">Go Back</button>
@@ -403,7 +406,7 @@
       <button id="to-archive" class="big-btn" type="button">Dark Room Archive</button>
       <div class="archive-note">
         <p>Browse the archive — see how each film type looks like. Take a look at other photos from DARK ROOM users who decided to share their shots with the platform.</p>
-        <p>Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#81e5e0f3eaaff3eeeeecafece6fbc1e6ece0e8edafe2eeec"><span class="__cf_email__" data-cfemail="c2a6a3b0a9ecb0adadafecafa5b882a5afa3abaeeca1adaf">[email&#160;protected]</span></a></p>
+        <p>Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#8eeaeffce5a0fce1e1e3a0e3e9f4cee9e3efe7e2a0ede1e3"><span class="__cf_email__" data-cfemail="03676271682d716c6c6e2d6e647943646e626a6f2d606c6e">[email&#160;protected]</span></a></p>
       </div>
     </div>
 
@@ -947,7 +950,7 @@
   var INTRO_LOGO_MS = 1000;
   var INTRO_DOOR_MS = 2000;
   var DOOR_OPEN_CSS_MS = 3100;
-  var SHADOW_CLOSE_DELAY_MS = 3900;
+  var SHADOW_CLOSE_DELAY_MS = 2000;
   var TAGLINE_PARTS = ['where analog', 'meets algorithm'];
   var TAGLINE_WIDTH_RATIO = 0.85;
   var TAGLINE_LETTER_MS = 50;
@@ -1020,7 +1023,13 @@
     });
   }
 
+  function fadeMenuOut() {
+    menu.classList.add('closing');
+    return fadeMenuTo(0, DOOR_CLOSE_MS);
+  }
+
   function showMenu() {
+    menu.classList.remove('closing');
     menu.style.opacity = '0';
     menu.classList.remove('hidden');
     return fadeMenuTo(1, MENU_FADE_MS);
@@ -1041,7 +1050,7 @@
   async function changeStepWithDoor(swapStep) {
     isTransitioning = true;
     goBackButton.classList.add('hidden');
-    await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
+    await Promise.all([fadeMenuOut(), playDoor('close', DOOR_CLOSE_MS)]);
     menu.classList.add('hidden');
     swapStep();
     await wait(DOOR_DARK_PAUSE_MS);
@@ -1099,7 +1108,7 @@
     var ux = (W - topX) / len;
     var uy = bottomY / len;
     var angle = Math.atan2(uy, ux);
-    var gap = 0.6 * CM;
+    var gap = 0.05 * CM;
 
     var edgePoint = function (s, offset) {
       return { x: topX + s * ux + offset * uy, y: s * uy - offset * ux };
@@ -1120,7 +1129,7 @@
     var sEndA = (Ktop - gap + gap * ux) / uy;
     placePart(partA, edgePoint(sEndA - partA.offsetWidth, gap + partA.offsetHeight));
 
-    var sStartB = (Kright + 0.25 * CM - topX) / ux;
+    var sStartB = (Kright + 1.8 * CM - topX) / ux;
     placePart(partB, edgePoint(sStartB, -gap));
   }
 
@@ -1244,7 +1253,7 @@
     goBackButton.classList.add('hidden');
     addWrap.classList.add('hidden');
     clickPrompt.classList.add('hidden');
-    await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
+    await Promise.all([fadeMenuOut(), playDoor('close', DOOR_CLOSE_MS)]);
     menu.classList.add('hidden');
     archiveBack.classList.add('hidden');
     clearPhotos();
@@ -1335,7 +1344,7 @@
       photoIndex = 0;
       clearPhotos();
 
-      await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
+      await Promise.all([fadeMenuOut(), playDoor('close', DOOR_CLOSE_MS)]);
       menu.classList.add('hidden');
       archiveBack.classList.add('hidden');
 
