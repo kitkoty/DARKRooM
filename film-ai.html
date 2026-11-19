@@ -128,8 +128,8 @@
   .archive-wrap { align-self: flex-start; margin-bottom: 20px; }
   .archive-note {
     max-height: 0; overflow: hidden; opacity: 0; margin-top: 0;
-    width: min(520px, 100%);
-    font-size: 1.02rem; line-height: 1.6; text-align: left;
+    width: min(540px, 100%);
+    font-size: 1.12rem; line-height: 1.6; text-align: left;
     transition: max-height .45s ease, opacity .3s ease, margin-top .45s ease;
   }
   .archive-note p + p { margin-top: 12px; }
@@ -287,7 +287,7 @@
     #content { padding: 20px 14px 56px; }
     .big-btn { width: 100%; max-width: 330px; font-size: 1rem; padding: 16px 18px; }
     .archive-wrap { align-self: center; }
-    .archive-note { font-size: .95rem; }
+    .archive-note { font-size: 1.02rem; }
     .frame { flex: 0 0 84%; min-height: 230px; padding: 28px 16px; }
     .frame p { font-size: 1.05rem; }
     .card { padding: 14px; }
@@ -322,8 +322,8 @@
     <div class="archive-wrap">
       <a class="big-btn" href="./">Dark Room Archive</a>
       <div class="archive-note">
-        <p>Browse the archive — see how each film type looks like. Take a look at other DARK ROOM users' photos who decided to share their shots.</p>
-        <p>Do you want to share your shots so that everyone can see them? Email your photos to <a href="mailto:dark.room.mgz@gmail.com">dark.room.mgz@gmail.com</a></p>
+        <p>Browse the archive — see how each film type looks like. Take a look at other photos from DARK ROOM users who decided to share their shots with the platform.</p>
+        <p>Do you want to share your shots so everyone can see them? Email your photos to <a href="mailto:dark.room.mgz@gmail.com">dark.room.mgz@gmail.com</a></p>
       </div>
     </div>
 
@@ -676,11 +676,11 @@
     var maxScroll = stripViewport.scrollWidth - stripViewport.clientWidth;
     if (maxScroll <= 8) return;
 
-    var duration = 4200;
+    var duration = 4700;
     var t0 = null;
     stripViewport.scrollLeft = maxScroll;
 
-    function ease(t) { return 1 - Math.pow(1 - t, 4.2); }
+    function ease(t) { return 1 - Math.pow(1 - t, 5.5); }
 
     function step(ts) {
       if (t0 === null) t0 = ts;
@@ -737,12 +737,12 @@
     await animateDoor(introLight, 'close', 1100);
 
     intro.classList.add('gone');
+    setContentVisible(true);
     await wait(480);
     if (!introRunning) return;
 
     intro.style.display = 'none';
     await animateDoor(light, 'open', 1400);
-    setContentVisible(true);
     introRunning = false;
     runHowTo();
   }
