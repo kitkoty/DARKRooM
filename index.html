@@ -47,7 +47,8 @@
 
   /* ---------- АРХИВ (заставка, выбор, фото) ---------- */
 
-  #archive { position: fixed; inset: 0; overflow: hidden; }
+  #archive { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; }
+  #archive.away > :not(#light-source):not(#identify) { display: none !important; }
 
   #hero-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
   #hero {
@@ -393,21 +394,19 @@
 
     <div id="add-wrap" class="hidden">
       <button id="add-archive" class="film-btn" type="button">Add to archive</button>
-      <div class="tip">Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#781c190a13560a17171556151f02381f15191114561b1715"><span class="__cf_email__" data-cfemail="543035263f7a263b3b397a39332e143339353d387a373b39">[email&#160;protected]</span></a></div>
+      <div class="tip">Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#abcfcad9c085d9c4c4c685c6ccd1ebccc6cac2c785c8c4c6"><span class="__cf_email__" data-cfemail="adc9ccdfc683dfc2c2c083c0cad7edcac0ccc4c183cec2c0">[email&#160;protected]</span></a></div>
     </div>
 
     <button id="go-back" class="hidden" type="button">Go Back</button>
     <button id="archive-back" class="film-btn hidden" type="button">Back</button>
-  </section>
-
-  <section id="identify" aria-label="Identifier">
+    <section id="identify" aria-label="Identifier">
     <button id="id-back" class="btn blend" type="button">Back</button>
 
     <div class="archive-wrap blend">
       <button id="to-archive" class="big-btn" type="button">Dark Room Archive</button>
       <div class="archive-note">
         <p>Browse the archive — see how each film type looks like. Take a look at other photos from DARK ROOM users who decided to share their shots with the platform.</p>
-        <p>Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#e98d889b82c79b868684c7848e93a98e84888085c78a8684"><span class="__cf_email__" data-cfemail="ed898c9f86c39f828280c3808a97ad8a808c8481c38e8280">[email&#160;protected]</span></a></p>
+        <p>Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#214540534a0f534e4e4c0f4c465b61464c40484d0f424e4c"><span class="__cf_email__" data-cfemail="cfabaebda4e1bda0a0a2e1a2a8b58fa8a2aea6a3e1aca0a2">[email&#160;protected]</span></a></p>
       </div>
     </div>
 
@@ -465,6 +464,9 @@
       <div id="log" class="blend">Waiting for folder...</div>
     </section>
   </section>
+  </section>
+
+
 </main>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function () {
@@ -1138,7 +1140,7 @@
   }
 
   function fitTagline() {
-    if (archive.classList.contains('hidden')) return;
+    if (archive.classList.contains('away')) return;
     tagline.style.fontSize = '';
     for (var p = 0; p < tagline.children.length; p++) {
       tagline.children[p].style.transform = 'none';
@@ -1264,9 +1266,10 @@
     isTransitioning = true;
     hideChoice();
     await playDoor('close', DOOR_CLOSE_MS);
-    archive.classList.add('hidden');
+    archive.classList.add('away');
     identify.classList.add('show');
-    window.scrollTo(0, 0);
+    archive.scrollTop = 0;
+    await wait(DOOR_DARK_PAUSE_MS);
     await playDoor('open', DOOR_OPEN_FAST_MS);
     showIdentify();
     isTransitioning = false;
@@ -1275,9 +1278,9 @@
   async function goToArchive() {
     if (isTransitioning) return;
     isTransitioning = true;
-    identify.classList.remove('show');
-    archive.classList.remove('hidden');
     await playDoor('close', DOOR_CLOSE_MS);
+    identify.classList.remove('show');
+    archive.classList.remove('away');
     selectedType = null;
     selectedFilm = null;
     showColorStep();
@@ -1294,11 +1297,12 @@
     isTransitioning = true;
     await playDoor('close', DOOR_CLOSE_MS);
     identify.classList.remove('show');
-    archive.classList.remove('hidden');
+    archive.classList.remove('away');
     menu.classList.add('hidden');
     menu.style.opacity = '0';
     goBackButton.classList.add('hidden');
     addWrap.classList.add('hidden');
+    archiveBack.classList.add('hidden');
     await wait(DOOR_DARK_PAUSE_MS);
     await playDoor('half', DOOR_OPEN_FAST_MS);
     showChoice();
@@ -1436,7 +1440,8 @@
   });
 
   archive.addEventListener('click', function (event) {
-    if (event.target.closest('button, a, #choice')) return;
+    if (event.target.closest('button, a, #choice, #identify')) return;
+    if (identify.classList.contains('show')) return;
     if (isTransitioning) return;
     if (!menu.classList.contains('hidden')) return;
     if (!filteredPhotos.length) return;
