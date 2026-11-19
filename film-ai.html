@@ -49,8 +49,9 @@
 
   #archive { position: fixed; inset: 0; overflow: hidden; }
 
+  #hero-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
   #hero {
-    visibility: hidden; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    visibility: hidden; position: relative;
     max-width: 90vw; font-size: clamp(3.5rem, 14vw, 9.5rem);
     display: flex; flex-direction: column; align-items: stretch; pointer-events: none;
   }
@@ -155,15 +156,22 @@
   }
   #go-back:hover, #go-back:focus-visible { background: #1a0000; color: #ff6666; outline: 1px solid #ff3030; outline-offset: 3px; }
 
-  #add-wrap { position: absolute; z-index: 30; top: 20px; left: 20px; }
-  #add-archive { background: #000; }
+  #archive-back { position: absolute; z-index: 20; top: 20px; right: 20px; }
+  #add-wrap { position: absolute; top: 20px; left: 20px; }
+  #add-archive {
+    position: relative; z-index: 30; mix-blend-mode: difference;
+    background: transparent; color: #ff0000; border: 1px solid #ff0000;
+  }
+  #add-archive:hover, #add-archive:focus-visible { background: transparent; color: #ff0000; transform: none; }
+  #add-archive:active { mix-blend-mode: normal; background: #000; color: #ff0000; border-color: #000; }
   .tip {
-    display: none; position: absolute; top: calc(100% + 10px); left: 0;
+    display: none; position: absolute; z-index: 30; top: 100%; left: 0;
     width: min(340px, 80vw); padding: 12px 14px;
     background: #000; border: 1px solid #ff0000; color: #ff0000;
     font-size: .9rem; line-height: 1.5; text-align: left;
   }
   #add-wrap:hover .tip, #add-wrap:focus-within .tip { display: block; }
+  .tip a { color: #ff0000; text-decoration: underline; word-break: break-all; }
 
   #archive > img {
     position: absolute; z-index: 5; width: clamp(145px, 22vw, 240px); height: auto; max-height: 45vh;
@@ -326,13 +334,13 @@
   <section id="archive" aria-label="Archive">
     <div id="light-source" aria-hidden="true"></div>
 
-    <div id="hero">
+    <div id="hero-wrap"><div id="hero">
       <h1 class="logo-box" aria-label="DARK RooM">
         <span class="logo-line" aria-hidden="true"><span>D</span><span>A</span><span>R</span><span>K</span></span>
         <span class="logo-line" aria-hidden="true"><span>R</span><span>o</span><span>o</span><span>M</span></span>
       </h1>
       <div id="tagline" aria-label="where analog meets algorithm"></div>
-    </div>
+    </div></div>
 
     <div id="transition-text" class="hidden">Make a step into the <span class="transition-dark">DARK ROOM</span></div>
     <div id="click-prompt" class="hidden">Click it</div>
@@ -381,10 +389,11 @@
 
     <div id="add-wrap" class="hidden">
       <button id="add-archive" class="film-btn" type="button">Add to archive</button>
-      <div class="tip">Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#7b1f1a0910550914141655161c013b1c161a121755181416"><span class="__cf_email__" data-cfemail="503431223b7e223f3f3d7e3d372a10373d31393c7e333f3d">[email&#160;protected]</span></a></div>
+      <div class="tip">Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#670306150c491508080a490a001d27000a060e0b4904080a"><span class="__cf_email__" data-cfemail="89ede8fbe2a7fbe6e6e4a7e4eef3c9eee4e8e0e5a7eae6e4">[email&#160;protected]</span></a></div>
     </div>
 
     <button id="go-back" class="hidden" type="button">Go Back</button>
+    <button id="archive-back" class="film-btn hidden" type="button">Back</button>
   </section>
 
   <section id="identify" aria-label="Identifier">
@@ -394,7 +403,7 @@
       <button id="to-archive" class="big-btn" type="button">Dark Room Archive</button>
       <div class="archive-note">
         <p>Browse the archive — see how each film type looks like. Take a look at other photos from DARK ROOM users who decided to share their shots with the platform.</p>
-        <p>Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#f397928198dd819c9c9edd9e9489b3949e929a9fdd909c9e"><span class="__cf_email__" data-cfemail="7d191c0f16530f12121053101a073d1a101c1411531e1210">[email&#160;protected]</span></a></p>
+        <p>Do you want to share your shots so everyone can see them? Email your photos to <a href="/cdn-cgi/l/email-protection#c8aca9baa3e6baa7a7a5e6a5afb288afa5a9a1a4e6aba7a5"><span class="__cf_email__" data-cfemail="fc989d8e97d28e939391d2919b86bc9b919d9590d29f9391">[email&#160;protected]</span></a></p>
       </div>
     </div>
 
@@ -961,6 +970,7 @@
   var goBackButton = $('go-back');
   var addWrap = $('add-wrap');
   var identify = $('identify');
+  var archiveBack = $('archive-back');
 
   var doorClip = DOOR_OPEN_CLIP;
   var doorAnim = null;
@@ -1031,13 +1041,13 @@
   async function changeStepWithDoor(swapStep) {
     isTransitioning = true;
     goBackButton.classList.add('hidden');
-    await fadeMenuTo(0, MENU_FADE_MS);
-    await playDoor('close', DOOR_CLOSE_MS);
+    await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
     menu.classList.add('hidden');
     swapStep();
     await wait(DOOR_DARK_PAUSE_MS);
     await playDoor('open', DOOR_OPEN_FAST_MS);
     goBackButton.classList.toggle('hidden', selectedType === null);
+    archiveBack.classList.toggle('hidden', selectedType !== null);
     await showMenu();
     isTransitioning = false;
   }
@@ -1178,6 +1188,7 @@
     await playDoor('open', DOOR_OPEN_FAST_MS);
     goBackButton.classList.add('hidden');
     await showMenu();
+    archiveBack.classList.remove('hidden');
     isTransitioning = false;
   }
 
@@ -1207,6 +1218,7 @@
     await playDoor('open', DOOR_OPEN_FAST_MS);
     goBackButton.classList.add('hidden');
     await showMenu();
+    archiveBack.classList.remove('hidden');
     isTransitioning = false;
   }
 
@@ -1226,6 +1238,24 @@
     isTransitioning = false;
   }
 
+  async function leaveArchive() {
+    if (isTransitioning) return;
+    isTransitioning = true;
+    goBackButton.classList.add('hidden');
+    addWrap.classList.add('hidden');
+    clickPrompt.classList.add('hidden');
+    await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
+    menu.classList.add('hidden');
+    archiveBack.classList.add('hidden');
+    clearPhotos();
+    filteredPhotos = [];
+    await wait(DOOR_DARK_PAUSE_MS);
+    await playDoor('half', DOOR_OPEN_FAST_MS);
+    showChoice();
+    isTransitioning = false;
+  }
+
+  archiveBack.addEventListener('click', leaveArchive);
   $('choose-analog').addEventListener('click', chooseAnalog);
   $('choose-algo').addEventListener('click', chooseAlgorithm);
   $('to-archive').addEventListener('click', goToArchive);
@@ -1305,9 +1335,9 @@
       photoIndex = 0;
       clearPhotos();
 
-      await fadeMenuTo(0, MENU_FADE_MS);
-      await playDoor('close', DOOR_CLOSE_MS);
+      await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
       menu.classList.add('hidden');
+      archiveBack.classList.add('hidden');
 
       await wait(DOOR_DARK_PAUSE_MS);
       await playDoor('open', DOOR_OPEN_FAST_MS);
