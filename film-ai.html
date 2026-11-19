@@ -107,10 +107,13 @@
     position: relative; z-index: 2; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center;
     padding: clamp(24px, 5vw, 64px) clamp(14px, 4vw, 20px) clamp(48px, 8vh, 80px);
-    mix-blend-mode: difference; color: #ff0000;
+    color: #ff0000;
     opacity: 0; transition: opacity .4s ease;
   }
   #content.shown { opacity: 1; }
+
+  /* Инверсия только для текста и кнопок; фото остаётся в своих цветах */
+  .blend { mix-blend-mode: difference; }
 
   /* ---------- КНОПКИ ---------- */
 
@@ -141,6 +144,16 @@
   .archive-note a { color: inherit; }
   .archive-wrap:hover .archive-note,
   .archive-wrap:focus-within .archive-note { max-height: 400px; opacity: 1; margin-top: 12px; }
+
+  .upload-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .upload-note {
+    max-height: 0; overflow: hidden; opacity: 0; margin-top: 0;
+    width: min(540px, 100%);
+    font-size: 1.02rem; line-height: 1.6; text-align: center;
+    transition: max-height .45s ease, opacity .3s ease, margin-top .45s ease;
+  }
+  .upload-wrap:hover .upload-note,
+  .upload-wrap:focus-within .upload-note { max-height: 200px; opacity: 1; margin-top: 12px; }
 
   .btn {
     display: inline-block; padding: 10px 18px; background: transparent; color: inherit;
@@ -223,7 +236,7 @@
     text-align: center; margin: 18px 0; min-height: 1.2em;
   }
 
-  #preview { display: none; max-width: 100%; max-height: 50vh; margin: 8px auto 20px; border: 1px solid currentColor; }
+  #preview { display: none; max-width: 100%; max-height: 50vh; margin: 8px auto 20px; border: 1px solid #000; }
 
   #results { display: grid; gap: 12px; width: 100%; }
   .card { border: 1px solid currentColor; padding: 18px; }
@@ -276,8 +289,10 @@
   .fb .btn { padding: 14px 22px; font-size: .95rem; letter-spacing: .08em; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-  .divider { border: none; border-top: 1px solid currentColor; margin: 30px 0 14px; width: 100%; }
+  .footer { width: 100%; margin-top: 30px; }
+  .divider { border: none; border-top: 1px solid currentColor; margin: 0 0 14px; width: 100%; }
   .learned { font-size: .82rem; letter-spacing: .04em; opacity: .85; width: 100%; }
+  .disclaimer { font-size: .95rem; line-height: 1.55; margin-top: 16px; width: 100%; }
 
   #log {
     font-family: ui-monospace, 'Cascadia Mono', monospace; font-size: .78rem; white-space: pre-wrap;
@@ -293,6 +308,7 @@
     .big-btn { width: 100%; max-width: 330px; font-size: 1rem; padding: 16px 18px; }
     .archive-wrap { align-self: center; }
     .archive-note { font-size: 1.02rem; }
+    .upload-note { font-size: .95rem; }
     .frame { flex: 0 0 84%; min-height: 230px; padding: 28px 16px; }
     .frame p { font-size: 1.05rem; }
     .card { padding: 14px; }
@@ -305,6 +321,7 @@
     .fb p.q { font-size: 1rem; }
     .fb .btn { padding: 13px 16px; font-size: .88rem; }
     .fb select { padding: 13px 10px; font-size: .88rem; }
+    .disclaimer { font-size: .88rem; }
   }
 </style>
 </head>
@@ -324,7 +341,7 @@
   <div id="light" aria-hidden="true"></div>
 
   <div id="content">
-    <div class="archive-wrap" id="archiveWrap">
+    <div class="archive-wrap blend" id="archiveWrap">
       <a class="big-btn" href="./">Dark Room Archive</a>
       <div class="archive-note">
         <p>Browse the archive — see how each film type looks like. Take a look at other photos from DARK ROOM users who decided to share their shots with the platform.</p>
@@ -332,17 +349,17 @@
       </div>
     </div>
 
-    <header class="logo">
+    <header class="logo blend">
       <h1><span>Film</span><span>Identifier</span></h1>
     </header>
 
-    <nav id="tabs">
+    <nav id="tabs" class="blend">
       <button id="tabDetect" class="btn on">Identify</button>
       <button id="tabSetup" class="btn">Setup</button>
     </nav>
 
     <section id="panelDetect" class="panel on">
-      <div class="howto">
+      <div class="howto blend">
         <p class="howto-head" id="howtoHead">How to use DARK ROOM ?</p>
 
         <div class="howto-body" id="howtoBody">
@@ -361,27 +378,30 @@
         </div>
       </div>
 
-      <div class="controls" id="controls">
-        <label class="big-btn" for="photo">Choose a photo</label>
+      <div class="controls blend" id="controls">
+        <div class="upload-wrap">
+          <label class="big-btn" for="photo">Choose a photo</label>
+          <p class="upload-note">The photo you upload is visible only to you. DARK ROOM does not store your images, only their mathematical representation.</p>
+        </div>
         <input id="photo" type="file" accept="image/*" hidden>
       </div>
 
-      <p id="status" class="status" aria-live="polite"></p>
+      <p id="status" class="status blend" aria-live="polite"></p>
       <canvas id="preview"></canvas>
-      <div id="results"></div>
+      <div id="results" class="blend"></div>
     </section>
 
     <section id="panelSetup" class="panel">
-      <p class="intro">Choose the <b>photos</b> folder once. The film name is taken from the file name.</p>
-      <div class="controls shown">
+      <p class="intro blend">Choose the <b>photos</b> folder once. The film name is taken from the file name.</p>
+      <div class="controls shown blend">
         <label class="btn" for="dir">Choose photos folder</label>
         <input id="dir" type="file" webkitdirectory directory multiple hidden>
       </div>
-      <div class="controls shown">
+      <div class="controls shown blend">
         <button id="build" class="btn">Build profiles</button>
         <button id="download" class="btn" disabled>Download profiles.json</button>
       </div>
-      <div id="log">Waiting for folder...</div>
+      <div id="log" class="blend">Waiting for folder...</div>
     </section>
   </div>
 </div>
@@ -395,6 +415,9 @@
   var SIZE = 256;
   var HUE_BINS = 12;
   var K_NEIGHBOURS = 7;
+  var GRAIN_INDEX = 19;
+  var DIGITAL_MARGIN = 0.2;
+  var DIGITAL_LABEL = 'digital';
 
   var SETUP_MODE = new URLSearchParams(window.location.search).has('setup');
 
@@ -624,6 +647,14 @@
     return value.toFixed(3);
   }
 
+  function filmGrainFloor() {
+    return Math.min.apply(null, profiles.classes.map(function (c) { return c.mean[GRAIN_INDEX]; }));
+  }
+
+  function isDigital(v) {
+    return v[GRAIN_INDEX] < filmGrainFloor() - DIGITAL_MARGIN;
+  }
+
   var $ = function (id) { return document.getElementById(id); };
   var light = $('light');
   var content = $('content');
@@ -839,7 +870,7 @@
 
   function allExamples() {
     var base = profiles && profiles.examples ? profiles.examples : [];
-    return base.concat(approvedExamples);
+    return base.concat(approvedExamples).filter(function (e) { return e.label !== DIGITAL_LABEL; });
   }
 
   function loadFile(file) {
@@ -893,6 +924,72 @@
     box.appendChild(card);
   }
 
+  function appendFooter(box) {
+    var footer = document.createElement('div');
+    footer.className = 'footer';
+
+    var divider = document.createElement('hr');
+    divider.className = 'divider';
+    footer.appendChild(divider);
+
+    var learned = document.createElement('p');
+    learned.className = 'learned';
+    learned.textContent = 'Learned by visitor answers in the database: ' + approvedExamples.length;
+    footer.appendChild(learned);
+
+    var disclaimer = document.createElement('p');
+    disclaimer.className = 'disclaimer';
+    disclaimer.textContent = 'The identification of the film may not be 100% accurate, as the final result depends not only on the film type, but also on the camera model, the chemicals used to develop the negatives, and the digitization process at the photo lab. DARK ROOM cannot account for these factors yet, but we are working on it!';
+    footer.appendChild(disclaimer);
+
+    box.appendChild(footer);
+  }
+
+  function renderDigital(box) {
+    var card = document.createElement('div');
+    card.className = 'card fade-in top';
+
+    var head = document.createElement('div');
+    head.className = 'head';
+    var name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = 'Digital photo';
+    head.appendChild(name);
+    card.appendChild(head);
+
+    var desc = document.createElement('p');
+    desc.className = 'desc';
+    desc.textContent = 'This frame looks digital, not a scan of a film photo.';
+    card.appendChild(desc);
+
+    var btn = document.createElement('button');
+    btn.className = 'more';
+    btn.textContent = 'Show details';
+    btn.setAttribute('aria-expanded', 'false');
+    card.appendChild(btn);
+
+    var wrap = document.createElement('div');
+    wrap.style.display = 'none';
+    var why = document.createElement('p');
+    why.className = 'desc';
+    why.style.marginTop = '12px';
+    why.textContent = 'Film always leaves a visible grain structure. The grain in this image (' +
+      lastVector[GRAIN_INDEX].toFixed(2) + ') is weaker than in every film profile in the archive (lowest film value: ' +
+      filmGrainFloor().toFixed(2) + '). Clean, smooth detail like this usually comes from a digital sensor, so the film identification was skipped.';
+    wrap.appendChild(why);
+    card.appendChild(wrap);
+
+    btn.addEventListener('click', function () {
+      var open = wrap.style.display !== 'none';
+      wrap.style.display = open ? 'none' : 'block';
+      btn.textContent = open ? 'Show details' : 'Hide details';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+    });
+
+    card.appendChild(buildFeedbackBlock(null));
+    box.appendChild(card);
+  }
+
   function renderResults() {
     var box = $('results');
     if (!profiles) {
@@ -901,8 +998,15 @@
     }
     if (!lastVector) return;
 
-    var ranked = predict(lastVector, profiles, allExamples());
     box.innerHTML = '';
+
+    if (isDigital(lastVector)) {
+      renderDigital(box);
+      appendFooter(box);
+      return;
+    }
+
+    var ranked = predict(lastVector, profiles, allExamples());
 
     ranked.slice(0, 2).forEach(function (item, index) {
       var info = DESCRIPTIONS[item.label] || {};
@@ -970,17 +1074,8 @@
       box.appendChild(rest);
     }
 
-    var fb = buildFeedbackBlock(ranked);
-    box.appendChild(fb);
-
-    var divider = document.createElement('hr');
-    divider.className = 'divider';
-    box.appendChild(divider);
-
-    var learned = document.createElement('p');
-    learned.className = 'learned';
-    learned.textContent = 'Learned by visitor answers in the database: ' + approvedExamples.length;
-    box.appendChild(learned);
+    box.appendChild(buildFeedbackBlock(ranked));
+    appendFooter(box);
   }
 
   function buildTable(cls) {
@@ -1018,26 +1113,34 @@
   }
 
   function buildFeedbackBlock(ranked) {
+    var digitalCase = !ranked;
+    var yesLabel = digitalCase ? DIGITAL_LABEL : ranked[0].label;
+    var yesText = digitalCase
+      ? 'Yes, it is a digital photo'
+      : 'Yes, it is ' + ((DESCRIPTIONS[ranked[0].label] || {}).title || ranked[0].label);
+    var questionText = digitalCase
+      ? 'Is this a digital photo? If not, choose the film below. Your answer will be reviewed and affects predictions after approval.'
+      : 'Is this correct? Your answer will be reviewed and affects predictions after approval.';
+
     var wrap = document.createElement('div');
     wrap.className = 'fb';
 
     var q = document.createElement('p');
     q.className = 'q';
-    q.textContent = 'Is this correct? Your answer will be reviewed and affects predictions after approval.';
+    q.textContent = questionText;
     wrap.appendChild(q);
 
     var row = document.createElement('div');
     row.className = 'row';
 
-    var topTitle = (DESCRIPTIONS[ranked[0].label] || {}).title || ranked[0].label;
     var yes = document.createElement('button');
     yes.className = 'btn';
-    yes.textContent = 'Yes, it is ' + topTitle;
+    yes.textContent = yesText;
     row.appendChild(yes);
 
     var select = document.createElement('select');
     select.setAttribute('aria-label', 'Choose the correct film');
-    select.appendChild(new Option('No, it is a different film…', ''));
+    select.appendChild(new Option(digitalCase ? 'No, it is a film photo…' : 'No, it is a different film…', ''));
     profiles.classes.forEach(function (c) {
       select.appendChild(new Option((DESCRIPTIONS[c.label] || {}).title || c.label, c.label));
     });
@@ -1066,7 +1169,7 @@
       });
     }
 
-    yes.addEventListener('click', function () { submit(ranked[0].label); });
+    yes.addEventListener('click', function () { submit(yesLabel); });
     send.addEventListener('click', function () {
       if (!select.value) { msg.textContent = 'Please choose a film from the list.'; return; }
       submit(select.value);
