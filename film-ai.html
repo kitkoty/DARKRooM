@@ -651,8 +651,22 @@
     return Math.min.apply(null, profiles.classes.map(function (c) { return c.mean[GRAIN_INDEX]; }));
   }
 
-  function isDigital(v) {
+  function digitalByGrain(v) {
     return v[GRAIN_INDEX] < filmGrainFloor() - DIGITAL_MARGIN;
+  }
+
+  function nearestDigitalCount(v) {
+    var examples = allExamples();
+    var scored = examples.map(function (e) {
+      return { label: e.label, d: distance(v, e.v, profiles.weight) };
+    }).sort(function (a, b) { return a.d - b.d; });
+    var near = scored.slice(0, Math.min(K_NEIGHBOURS, scored.length));
+    var dig = near.filter(function (s) { return s.label === DIGITAL_LABEL; }).length;
+    return { digital: dig, total: near.length, isDigital: near.length > 0 && dig > near.length / 2 };
+  }
+
+  function isDigital(v) {
+    return digitalByGrain(v) || nearestDigitalCount(v).isDigital;
   }
 
   var $ = function (id) { return document.getElementById(id); };
@@ -870,7 +884,11 @@
 
   function allExamples() {
     var base = profiles && profiles.examples ? profiles.examples : [];
-    return base.concat(approvedExamples).filter(function (e) { return e.label !== DIGITAL_LABEL; });
+    return base.concat(approvedExamples);
+  }
+
+  function filmExamples() {
+    return allExamples().filter(function (e) { return e.label !== DIGITAL_LABEL; });
   }
 
   function loadFile(file) {
@@ -932,9 +950,11 @@
     divider.className = 'divider';
     footer.appendChild(divider);
 
+    var digitalCount = approvedExamples.filter(function (e) { return e.label === DIGITAL_LABEL; }).length;
     var learned = document.createElement('p');
     learned.className = 'learned';
-    learned.textContent = 'Learned by visitor answers in the database: ' + approvedExamples.length;
+    learned.textContent = 'Learned by visitor answers in the database: ' +
+      (approvedExamples.length - digitalCount) + ' film, ' + digitalCount + ' digital';
     footer.appendChild(learned);
 
     var disclaimer = document.createElement('p');
@@ -973,9 +993,15 @@
     var why = document.createElement('p');
     why.className = 'desc';
     why.style.marginTop = '12px';
-    why.textContent = 'Film always leaves a visible grain structure. The grain in this image (' +
-      lastVector[GRAIN_INDEX].toFixed(2) + ') is weaker than in every film profile in the archive (lowest film value: ' +
-      filmGrainFloor().toFixed(2) + '). Clean, smooth detail like this usually comes from a digital sensor, so the film identification was skipped.';
+    if (digitalByGrain(lastVector)) {
+      why.textContent = 'Film always leaves a visible grain structure. The grain in this image (' +
+        lastVector[GRAIN_INDEX].toFixed(2) + ') is weaker than in every film profile in the archive (lowest film value: ' +
+        filmGrainFloor().toFixed(2) + '). Clean, smooth detail like this usually comes from a digital sensor, so the film identification was skipped.';
+    } else {
+      var nd = nearestDigitalCount(lastVector);
+      why.textContent = 'Most of the closest examples in the archive for this frame (' + nd.digital + ' of ' + nd.total +
+        ') are digital photos confirmed by visitors, so the film identification was skipped.';
+    }
     wrap.appendChild(why);
     card.appendChild(wrap);
 
@@ -1006,7 +1032,7 @@
       return;
     }
 
-    var ranked = predict(lastVector, profiles, allExamples());
+    var ranked = predict(lastVector, profiles, filmExamples());
 
     ranked.slice(0, 2).forEach(function (item, index) {
       var info = DESCRIPTIONS[item.label] || {};
