@@ -112,22 +112,29 @@
   }
   #content.shown { opacity: 1; }
 
-  .back {
-    align-self: flex-start; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
-    color: inherit; text-decoration: none; padding: 6px 0; margin-bottom: 18px;
-    border-bottom: 1px dashed currentColor; opacity: .8;
-  }
-  .back:hover, .back:focus-visible { opacity: 1; border-bottom-style: solid; }
+  /* ---------- КНОПКИ ---------- */
 
-  .logo { text-align: center; margin-bottom: 10px; width: 100%; }
-  .logo h1 {
-    font-family: 'Lexend Tera', sans-serif; font-weight: 900;
-    font-size: clamp(1.8rem, 6.5vw, 4.4rem); line-height: .9; text-transform: uppercase;
+  .big-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 330px; max-width: 100%; padding: 19px 24px;
+    background: transparent; color: inherit; border: 1px solid currentColor;
+    font: inherit; font-size: 1.12rem; letter-spacing: .12em; text-transform: uppercase;
+    text-align: center; text-decoration: none; cursor: pointer;
+    transition: background .18s, color .18s;
   }
-  .logo h1 span { display: block; }
+  .big-btn:hover, .big-btn:focus-visible { background: #ff0000; color: #000; }
+  :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
-  #tabs { display: none; gap: 10px; margin: 24px 0 26px; flex-wrap: wrap; justify-content: center; }
-  #tabs.shown { display: flex; }
+  .archive-wrap { position: relative; align-self: flex-start; margin-bottom: 20px; }
+  .archive-note {
+    position: absolute; top: calc(100% + 10px); left: 0; z-index: 6;
+    width: min(430px, 84vw); padding: 14px 16px;
+    background: #000; border: 1px solid currentColor;
+    font-size: .86rem; line-height: 1.5; text-align: left;
+    opacity: 0; visibility: hidden; transition: opacity .2s ease;
+  }
+  .archive-wrap:hover .archive-note,
+  .archive-wrap:focus-within .archive-note { opacity: 1; visibility: visible; }
 
   .btn {
     display: inline-block; padding: 10px 18px; background: transparent; color: inherit;
@@ -137,26 +144,68 @@
   }
   .btn:hover:not(:disabled), .btn.on { background: #ff0000; color: #000; }
   .btn:disabled { opacity: .35; cursor: default; }
-  :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
-  .panel { display: none; width: min(860px, 100%); }
+  .logo { text-align: center; margin-bottom: 6px; width: 100%; }
+  .logo h1 {
+    font-family: 'Lexend Tera', sans-serif; font-weight: 900;
+    font-size: clamp(1.8rem, 6.5vw, 4.4rem); line-height: .9; text-transform: uppercase;
+  }
+  .logo h1 span { display: block; }
+
+  #tabs { display: none; gap: 10px; margin: 24px 0 26px; flex-wrap: wrap; justify-content: center; }
+  #tabs.shown { display: flex; }
+
+  .panel { display: none; width: min(980px, 100%); }
   .panel.on { display: block; }
   .intro { font-size: .92rem; line-height: 1.55; max-width: 620px; margin: 0 auto 22px; text-align: center; }
 
-  /* ---------- КАДРЫ ПЛЁНКИ ---------- */
+  /* ---------- ИНСТРУКЦИЯ ---------- */
 
-  .filmstrip { width: 100%; border: 2px solid currentColor; margin: 0 auto 28px; }
-  .perf { height: 16px; background: repeating-linear-gradient(90deg, currentColor 0 12px, transparent 12px 26px); }
-  .perf.top { border-bottom: 2px solid currentColor; }
-  .perf.bottom { border-top: 2px solid currentColor; }
-  .frames { display: grid; grid-template-columns: repeat(2, 1fr); }
-  .frame { padding: 22px 20px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; }
-  .frame:nth-child(2n) { border-right: none; }
-  .frame:nth-last-child(-n+2) { border-bottom: none; }
-  .frame b { display: block; font-family: 'Lexend Tera', sans-serif; font-weight: 900; font-size: 1.05rem; margin-bottom: 8px; }
-  .frame p { font-size: 1.02rem; line-height: 1.45; }
+  .howto { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-  .controls { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 18px; }
+  .howto-head {
+    font-family: 'Lexend Tera', sans-serif; font-weight: 900; text-transform: uppercase;
+    font-size: clamp(1.5rem, 4.6vw, 3rem); letter-spacing: .04em; text-align: center;
+    margin: clamp(30px, 8vh, 90px) 0; opacity: 0; transition: opacity .55s ease;
+  }
+  .howto-head.shown { opacity: 1; }
+
+  .howto-body { display: none; width: 100%; margin-top: 14px; }
+  .howto-body.shown { display: block; }
+  .howto-title {
+    font-family: 'Lexend Tera', sans-serif; font-weight: 900; text-transform: uppercase;
+    font-size: clamp(1rem, 2.5vw, 1.6rem); letter-spacing: .03em;
+    text-align: center; margin: 0 0 18px;
+  }
+
+  .filmstrip { width: 100%; border: 2px solid currentColor; overflow: hidden; }
+  .perf {
+    height: 16px;
+    background: repeating-linear-gradient(90deg, currentColor 0 12px, transparent 12px 26px);
+  }
+  .filmstrip .perf:first-child { border-bottom: 2px solid currentColor; }
+  .filmstrip .perf:last-child { border-top: 2px solid currentColor; }
+
+  .strip-viewport { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .strip-viewport::-webkit-scrollbar { display: none; }
+
+  .frames { display: flex; }
+  .frame {
+    flex: 0 0 25%; min-height: 250px; padding: 32px 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; border-right: 2px solid currentColor;
+  }
+  .frame b {
+    display: block; font-family: 'Lexend Tera', sans-serif; font-weight: 900;
+    font-size: 1.2rem; margin-bottom: 12px;
+  }
+  .frame p { font-size: clamp(1rem, 1.35vw, 1.3rem); line-height: 1.45; }
+
+  .controls {
+    display: flex; justify-content: center; margin: 30px 0 4px;
+    opacity: 0; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease;
+  }
+  .controls.shown { opacity: 1; transform: none; }
 
   .status {
     font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
@@ -192,7 +241,7 @@
   }
   .table-scroll::-webkit-scrollbar { width: 10px; }
   .table-scroll::-webkit-scrollbar-track { background: transparent; }
-  .table-scroll::-webkit-scrollbar-thumb { background: #ff0000; border-radius: 0; }
+  .table-scroll::-webkit-scrollbar-thumb { background: #ff0000; }
 
   table { width: 100%; border-collapse: collapse; font-size: .8rem; }
   th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(255, 0, 0, .28); }
@@ -222,15 +271,11 @@
   .fade-in { animation: fadeIn .4s ease; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-  @media (max-width: 640px) {
+  @media (max-width: 700px) {
     #content { padding: 20px 14px 56px; }
-    .back { font-size: .66rem; margin-bottom: 14px; }
-    .btn { padding: 10px 13px; font-size: .72rem; }
-    .intro { font-size: .86rem; }
-    .frames { grid-template-columns: 1fr; }
-    .frame { padding: 18px 16px; border-right: none; }
-    .frame:not(:last-child) { border-bottom: 2px solid currentColor; }
-    .frame p { font-size: .94rem; }
+    .big-btn { width: 100%; max-width: 330px; font-size: 1rem; padding: 16px 18px; }
+    .archive-wrap { align-self: center; }
+    .frame { flex: 0 0 84%; min-height: 230px; padding: 28px 16px; }
     .card { padding: 14px; }
     .name { font-size: .88rem; }
     .pct { font-size: 1.1rem; min-width: 4ch; }
@@ -256,7 +301,10 @@
   <div id="light" aria-hidden="true"></div>
 
   <div id="content">
-    <a class="back" href="./">← Dark Room Archive</a>
+    <div class="archive-wrap">
+      <a class="big-btn" href="./">Dark Room Archive</a>
+      <p class="archive-note">Browse the archive: see how each film looks and the photos other DARK ROOM users chose to share. Want your shots there too? Email them to dark.room.mgz@gmail.com</p>
+    </div>
 
     <header class="logo">
       <h1><span>Film</span><span>Identifier</span></h1>
@@ -268,21 +316,31 @@
     </nav>
 
     <section id="panelDetect" class="panel on">
-      <div class="filmstrip">
-        <div class="perf top" aria-hidden="true"></div>
-        <div class="frames">
-          <div class="frame"><b>1</b><p>Upload a photo.</p></div>
-          <div class="frame"><b>2</b><p>DARK ROOM compares its colour, contrast and grain with the archive film profiles.</p></div>
-          <div class="frame"><b>3</b><p>You get the two closest film matches, with the reasons why.</p></div>
-          <div class="frame"><b>4</b><p>Sure the match is wrong? Pick the correct film and press Save. This helps DARK ROOM learn.</p></div>
+      <div class="howto">
+        <p class="howto-head" id="howtoHead">How to use DARK ROOM ?</p>
+
+        <div class="howto-body" id="howtoBody">
+          <h2 class="howto-title">How to use DARK ROOM</h2>
+          <div class="filmstrip">
+            <div class="perf" aria-hidden="true"></div>
+            <div class="strip-viewport" id="stripViewport">
+              <div class="frames" id="frames">
+                <div class="frame"><b>1</b><p>Upload a photo.</p></div>
+                <div class="frame"><b>2</b><p>DARK ROOM compares its colour, contrast and grain with the archive film profiles.</p></div>
+                <div class="frame"><b>3</b><p>You get the two closest film matches, with the reasons why.</p></div>
+                <div class="frame"><b>4</b><p>Sure the match is wrong? Pick the correct film and press Save. This helps DARK ROOM learn.</p></div>
+              </div>
+            </div>
+            <div class="perf" aria-hidden="true"></div>
+          </div>
         </div>
-        <div class="perf bottom" aria-hidden="true"></div>
       </div>
 
-      <div class="controls">
-        <label class="btn" for="photo">Choose a photo</label>
+      <div class="controls" id="controls">
+        <label class="big-btn" for="photo">Choose a photo</label>
         <input id="photo" type="file" accept="image/*" hidden>
       </div>
+
       <p id="status" class="status" aria-live="polite"></p>
       <canvas id="preview"></canvas>
       <div id="results"></div>
@@ -290,11 +348,11 @@
 
     <section id="panelSetup" class="panel">
       <p class="intro">Choose the <b>photos</b> folder once. The film name is taken from the file name.</p>
-      <div class="controls">
+      <div class="controls shown">
         <label class="btn" for="dir">Choose photos folder</label>
         <input id="dir" type="file" webkitdirectory directory multiple hidden>
       </div>
-      <div class="controls">
+      <div class="controls shown">
         <button id="build" class="btn">Build profiles</button>
         <button id="download" class="btn" disabled>Download profiles.json</button>
       </div>
@@ -547,10 +605,16 @@
   var intro = $('intro');
   var introLight = $('introLight');
   var hero = $('hero');
+  var howtoHead = $('howtoHead');
+  var howtoBody = $('howtoBody');
+  var controls = $('controls');
+  var stripViewport = $('stripViewport');
+  var frames = $('frames');
   var profiles = null;
   var approvedExamples = [];
   var lastVector = null;
   var switching = false;
+  var howToStarted = false;
 
   function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
 
@@ -575,6 +639,56 @@
 
   function setContentVisible(visible) { content.classList.toggle('shown', visible); }
 
+  /* ---------- инструкция ---------- */
+
+  function rollFilm() {
+    if (!stripViewport || !frames) return;
+
+    if (!frames.dataset.cloned) {
+      Array.prototype.slice.call(frames.children).forEach(function (frame) {
+        var copy = frame.cloneNode(true);
+        copy.setAttribute('aria-hidden', 'true');
+        frames.appendChild(copy);
+      });
+      frames.dataset.cloned = '1';
+    }
+
+    var start = stripViewport.scrollWidth - stripViewport.clientWidth;
+    if (start <= 8) return;
+
+    var duration = 2400;
+    var t0 = null;
+    stripViewport.scrollLeft = start;
+
+    function ease(t) { return 1 - Math.pow(1 - t, 3.4); }
+
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / duration);
+      stripViewport.scrollLeft = start * (1 - ease(p));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  async function runHowTo() {
+    if (howToStarted) return;
+    howToStarted = true;
+
+    await wait(450);
+    howtoHead.classList.add('shown');
+    await wait(1600);
+    howtoHead.classList.remove('shown');
+    await wait(520);
+    howtoHead.style.display = 'none';
+
+    howtoBody.classList.add('shown');
+    controls.classList.add('shown');
+
+    await wait(140);
+    rollFilm();
+  }
+
   var introRunning = true;
 
   async function runIntro() {
@@ -598,6 +712,7 @@
     await animateDoor(light, 'open', 1400);
     setContentVisible(true);
     introRunning = false;
+    runHowTo();
   }
 
   function skipIntro() {
@@ -608,6 +723,7 @@
     void light.offsetWidth;
     light.style.animation = 'doorOpen 1ms linear forwards';
     setContentVisible(true);
+    runHowTo();
   }
 
   intro.addEventListener('click', skipIntro);
