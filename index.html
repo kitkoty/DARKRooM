@@ -56,7 +56,7 @@
     clip-path: polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%);
   }
   #ink-id, #ink-id * { pointer-events: none !important; }
-  #ink-id * { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+  #ink-id * { color: #000 !important; border-color: #000 !important; background: transparent !important; text-decoration-color: #000 !important; }
   #ink-id .bar i, #ink-id .mini i { background: #000 !important; }
 
   #ink {
@@ -231,7 +231,7 @@
     font: inherit; font-size: 1.12rem; letter-spacing: .12em; text-transform: uppercase;
     text-align: center; text-decoration: none; cursor: pointer; transition: background .18s, color .18s;
   }
-  .big-btn:hover, .big-btn:focus-visible { background: #ff0000; color: #000; }
+  .big-btn:hover, .big-btn:focus-visible { background: transparent; color: inherit; text-decoration: underline; }
   :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
   .archive-wrap { align-self: flex-start; margin-bottom: 20px; }
@@ -257,7 +257,7 @@
     border: 1px solid currentColor; font: inherit; font-size: .8rem; text-align: center;
     letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: background .18s, color .18s;
   }
-  .btn:hover:not(:disabled), .btn.on { background: #ff0000; color: #000; }
+  .btn:hover:not(:disabled), .btn.on { background: transparent; color: inherit; text-decoration: underline; }
   .btn:disabled { opacity: .35; cursor: default; }
   #id-back { position: absolute; top: 20px; right: 20px; }
 
@@ -284,7 +284,7 @@
   .howto-head.final { font-size: clamp(.95rem, 3.1vw, 2rem); margin: 0 0 18px; }
   .howto-body { display: none; width: 100%; margin-top: 4px; }
   .howto-body.shown { display: block; }
-  .filmstrip { width: 100%; border: 2px solid currentColor; overflow: hidden; }
+  .filmstrip { width: 100%; border: 2px solid currentColor; border-color: currentColor; overflow: hidden; }
   .perf { height: 16px; background: repeating-linear-gradient(90deg, currentColor 0 12px, transparent 12px 26px); }
   .filmstrip .perf:first-child { border-bottom: 2px solid currentColor; }
   .filmstrip .perf:last-child { border-top: 2px solid currentColor; }
