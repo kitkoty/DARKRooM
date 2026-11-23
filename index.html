@@ -1821,6 +1821,8 @@
     var duration = 2200;
     var t0 = null;
     viewport.scrollLeft = travel;
+    var c0 = inkIdRoot && inkIdRoot.querySelector('.strip-viewport');
+    if (c0) c0.scrollLeft = travel;
 
     var progress = function (t) {
       var SPLIT = 0.55, COVER = 0.68;
@@ -1828,12 +1830,18 @@
       var u = (t - SPLIT) / (1 - SPLIT);
       return COVER + (1 - COVER) * (1 - Math.pow(1 - u, 1.75));
     };
+    var inkViewport = function () { return inkIdRoot && inkIdRoot.querySelector('.strip-viewport'); };
+    var setStrip = function (x) {
+      viewport.scrollLeft = x;
+      var c = inkViewport();
+      if (c) c.scrollLeft = x;
+    };
     var step = function (ts) {
       if (t0 === null) t0 = ts;
       var p = Math.min(1, (ts - t0) / duration);
-      viewport.scrollLeft = travel * (1 - progress(p));
+      setStrip(travel * (1 - progress(p)));
       if (p < 1) requestAnimationFrame(step);
-      else viewport.scrollLeft = 0;
+      else setStrip(0);
     };
     requestAnimationFrame(step);
   }
