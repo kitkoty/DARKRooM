@@ -19,7 +19,7 @@
   #light-source {
     position: fixed; inset: 0; z-index: 1; pointer-events: none;
     clip-path: polygon(2cm 0, calc(2cm + 12% + 2cm) 0, 100% calc(100% - 6cm), 110% 115%, -10% 115%, 0 100%);
-    background: #ff0000; filter: blur(24px); opacity: 0;
+    background: #ff0000; opacity: 0;
     animation: openDoor 3.1s cubic-bezier(.2, .72, .2, 1) 2s forwards;
     will-change: clip-path, opacity;
   }
@@ -1045,9 +1045,23 @@
   /* ---------- ДВЕРЬ ---------- */
 
   var CM = 96 / 2.54;
-  var DOOR_CLOSED_CLIP = 'polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%)';
-  var DOOR_OPEN_CLIP = 'polygon(2cm 0, calc(4cm + 12%) 0, 100% calc(100% - 6cm), 110% 115%, -10% 115%, 0 100%)';
-  var DOOR_HALF_CLIP = 'polygon(-5% -5%, -5% -5%, 105% 105%, 105% 105%, -5% 105%, -5% 105%)';
+  function pxPolygon(pts) {
+    return 'polygon(' + pts.map(function (p) {
+      return p[0].toFixed(1) + 'px ' + p[1].toFixed(1) + 'px';
+    }).join(', ') + ')';
+  }
+  function doorClosed() {
+    var W = window.innerWidth, H = window.innerHeight;
+    return pxPolygon([[2 * CM, 0], [2 * CM + 0.005 * W, 0], [2 * CM + 0.005 * W, H], [1.1 * W, 1.15 * H], [-0.1 * W, 1.15 * H], [2 * CM, H]]);
+  }
+  function doorOpen() {
+    var W = window.innerWidth, H = window.innerHeight;
+    return pxPolygon([[2 * CM, 0], [4 * CM + 0.12 * W, 0], [W, H - 6 * CM], [1.1 * W, 1.15 * H], [-0.1 * W, 1.15 * H], [0, H]]);
+  }
+  function doorHalf() {
+    var W = window.innerWidth, H = window.innerHeight;
+    return pxPolygon([[-0.05 * W, -0.05 * H], [-0.05 * W, -0.05 * H], [1.05 * W, 1.05 * H], [1.05 * W, 1.05 * H], [-0.05 * W, 1.05 * H], [-0.05 * W, 1.05 * H]]);
+  }
   var DOOR_EASING = 'cubic-bezier(.2, .72, .2, 1)';
   var DOOR_CLOSE_EASING = 'cubic-bezier(.45, 0, .55, 1)';
   var DOOR_CLOSE_MS = 1600;
@@ -1082,7 +1096,7 @@
   var identify = $('identify');
   var archiveBack = $('archive-back');
 
-  var doorClip = DOOR_OPEN_CLIP;
+  var doorClip = null;
   var doorAnims = [];
   var inkLayer = $('ink');
   var menuFadeFrame = null;
@@ -1094,25 +1108,22 @@
 
   function playDoor(kind, duration) {
     doorAnims.forEach(function (a) { a.cancel(); });
-    var target = kind === 'close' ? DOOR_CLOSED_CLIP : (kind === 'half' ? DOOR_HALF_CLIP : DOOR_OPEN_CLIP);
+    var closedClip = doorClosed();
+    var target = kind === 'close' ? closedClip : (kind === 'half' ? doorHalf() : doorOpen());
     var frames;
     if (kind === 'close') {
       frames = [
-        { opacity: 1, clipPath: doorClip, filter: 'blur(24px)' },
-        { opacity: 1, clipPath: DOOR_CLOSED_CLIP, filter: 'blur(1px)', offset: 0.97 },
-        { opacity: 0, clipPath: DOOR_CLOSED_CLIP, filter: 'blur(1px)', offset: 1 }
+        { opacity: 1, clipPath: doorClip || doorOpen() },
+        { opacity: 1, clipPath: closedClip, offset: 0.97 },
+        { opacity: 0, clipPath: closedClip, offset: 1 }
       ];
     } else {
       frames = [
-        { opacity: 0, clipPath: DOOR_CLOSED_CLIP },
+        { opacity: 0, clipPath: closedClip },
         { opacity: 1, clipPath: target }
       ];
     }
-    var inkFrames = frames.map(function (f) {
-      var g = {};
-      for (var k in f) if (k !== 'filter') g[k] = f[k];
-      return g;
-    });
+    var inkFrames = frames;
     var options = {
       duration: duration,
       easing: kind === 'close' ? DOOR_CLOSE_EASING : DOOR_EASING,
@@ -1366,6 +1377,7 @@
     goBackButton.classList.add('hidden');
     addWrap.classList.add('hidden');
     archiveBack.classList.add('hidden');
+    $('hero-wrap').style.visibility = 'hidden';
     await wait(DOOR_DARK_PAUSE_MS);
     await playDoor('half', DOOR_OPEN_FAST_MS);
     showChoice();
