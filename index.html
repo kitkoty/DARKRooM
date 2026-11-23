@@ -59,6 +59,7 @@
   #ink-id, #ink-id * { pointer-events: none !important; }
   #ink-id * { color: #000 !important; border-color: #000 !important; background: transparent !important; text-decoration-color: #000 !important; }
   #ink-id .bar i, #ink-id .mini i { background: #000 !important; }
+  #ink-id .perf { background: repeating-linear-gradient(90deg, #000 0 12px, transparent 12px 26px) !important; }
   #ink-id .big-btn.mirror-hover, #ink-id .btn.mirror-hover { text-decoration: underline; background: transparent; }
   #ink-id .archive-wrap.mirror-hover .archive-note { max-height: 400px; opacity: 1; margin-top: 12px; }
   #ink-id .upload-wrap.mirror-hover .upload-note { max-height: 200px; opacity: 1; margin-top: 12px; }
@@ -236,6 +237,7 @@
     text-align: center; text-decoration: none; cursor: pointer; transition: background .18s, color .18s;
   }
   .big-btn:hover, .big-btn:focus-visible { background: #ff0000; color: #000; }
+  #to-archive { width: 304px; }
   :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
   .archive-wrap { align-self: flex-start; margin-bottom: 20px; }
@@ -348,6 +350,7 @@
     #go-back { bottom: max(16px, env(safe-area-inset-bottom)); }
     #identify, .ink-identify { padding: 72px 14px 56px; }
     .big-btn { width: 100%; max-width: 330px; font-size: 1rem; padding: 16px 18px; }
+    #to-archive { max-width: 304px; }
     .archive-wrap { align-self: stretch; width: 100%; }
     #id-back { top: 16px; right: 14px; }
     .archive-note, .upload-note { font-size: .95rem; }
