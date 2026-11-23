@@ -52,6 +52,11 @@
   #ink-id .bar i, #ink-id .mini i { background: #000 !important; }
   #ink-id .perf { background: repeating-linear-gradient(90deg, #000 0 12px, transparent 12px 26px) !important; }
   #ink-id .big-btn.mirror-hover, #ink-id .btn.mirror-hover { text-decoration: underline; background: transparent; }
+  /* На телефонах и узких экранах вкладка Идентификатор показывается без «светового» слоя:
+     iOS Safari не обрезает clip-path у элемента с blur-потомками и заливает экран красным. */
+  @media (max-width: 700px), (hover: none) and (pointer: coarse) {
+    #archive.away #light-source, #archive.away #ink-id { visibility: hidden !important; }
+  }
   #ink-id .archive-wrap.mirror-hover .archive-note { max-height: 400px; opacity: 1; margin-top: 12px; }
   #ink-id .upload-wrap.mirror-hover .upload-note { max-height: 200px; opacity: 1; margin-top: 12px; }
 
@@ -71,8 +76,11 @@
     display: flex; flex-direction: column; align-items: stretch; pointer-events: none;
   }
   #hero.shown { visibility: visible; }
-  #hero.fade-out { animation: heroFadeOut 1s ease forwards; }
-  @keyframes heroFadeOut { to { opacity: 0; filter: blur(8px); } }
+  /* Плавное исчезновение через transition (а не @keyframes): анимация не перезапускается,
+     когда архив снова показывается после display:none (уход с вкладки Идентификатор). */
+  #hero { transition: opacity 1s ease, filter 1s ease; }
+  #hero.fade-out { opacity: 0; filter: blur(8px); }
+  #hero.gone { display: none !important; }
 
   .logo-box {
     display: flex; flex-direction: column; align-items: stretch; margin: 0;
@@ -1272,6 +1280,52 @@
 
   var busy = false;
 
+  /* ---------- ИСТОРИЯ БРАУЗЕРА (кнопка «Назад») ---------- */
+
+  var currentView = 'intro';
+  try { history.replaceState({ view: 'intro' }, ''); } catch (e) {}
+
+  function pushView(v) {
+    currentView = v;
+    try { history.pushState({ view: v }, ''); } catch (e) {}
+  }
+  function replaceView(v) {
+    currentView = v;
+    try { history.replaceState({ view: v }, ''); } catch (e) {}
+  }
+  function isFlatIdentify() {
+    return !!(window.matchMedia && window.matchMedia('(max-width: 700px), (hover: none) and (pointer: coarse)').matches);
+  }
+  function leaveToChoice() {
+    var v = currentView;
+    if (v === 'identify') { currentView = 'choice'; return goToChoice(); }
+    if (v === 'archive') { currentView = 'choice'; return leaveArchive(); }
+  }
+  function backToChoice() {
+    if (isTransitioning) return;
+    var before = currentView;
+    if (before !== 'identify' && before !== 'archive') return;
+    if (history.state && history.state.view === before) {
+      history.back();
+      window.setTimeout(function () {
+        if (currentView === before && !isTransitioning) leaveToChoice();
+      }, 700);
+    } else {
+      leaveToChoice();
+    }
+  }
+  window.addEventListener('popstate', async function (e) {
+    var target = (e.state && e.state.view) || 'choice';
+    if (target === 'intro') target = 'choice';
+    while (isTransitioning) await wait(100);
+    if (target === currentView) return;
+    if (target === 'choice') leaveToChoice();
+    else if (currentView === 'choice') {
+      if (target === 'identify') chooseAlgorithm(true);
+      else if (target === 'archive') chooseAnalog(true);
+    }
+  });
+
   function showChoice() {
     choice.classList.add('show');
     $('contacts').classList.add('on');
@@ -1292,7 +1346,8 @@
     await wait(1500);
 
     hero.classList.add('fade-out');
-    await wait(800);
+    await wait(1000);
+    hero.classList.add('gone');
 
     transitionText.classList.remove('hidden');
     transitionText.classList.add('visible');
@@ -1305,12 +1360,14 @@
     await wait(DOOR_DARK_PAUSE_MS);
     await playDoor('half', DOOR_OPEN_FAST_MS);
     showChoice();
+    replaceView('choice');
     isTransitioning = false;
   }
 
-  async function chooseAnalog() {
+  async function chooseAnalog(fromHistory) {
     if (isTransitioning) return;
     isTransitioning = true;
+    if (fromHistory === true) currentView = 'archive'; else pushView('archive');
     hideChoice();
     await playDoor('close', DOOR_CLOSE_MS);
     selectedType = null;
@@ -1324,16 +1381,17 @@
     isTransitioning = false;
   }
 
-  async function chooseAlgorithm() {
+  async function chooseAlgorithm(fromHistory) {
     if (isTransitioning) return;
     isTransitioning = true;
+    if (fromHistory === true) currentView = 'identify'; else pushView('identify');
     hideChoice();
     await playDoor('close', DOOR_CLOSE_MS);
     archive.classList.add('away');
     identify.classList.add('show');
     archive.scrollTop = 0;
     await wait(DOOR_DARK_PAUSE_MS);
-    await playDoor('open', DOOR_OPEN_FAST_MS);
+    await playDoor('open', isFlatIdentify() ? 150 : DOOR_OPEN_FAST_MS);
     showIdentify();
     isTransitioning = false;
   }
@@ -1341,7 +1399,8 @@
   async function goToArchive() {
     if (isTransitioning) return;
     isTransitioning = true;
-    await playDoor('close', DOOR_CLOSE_MS);
+    replaceView('archive');
+    await playDoor('close', isFlatIdentify() ? 200 : DOOR_CLOSE_MS);
     identify.classList.remove('show');
     archive.classList.remove('away');
     selectedType = null;
@@ -1358,7 +1417,7 @@
   async function goToChoice() {
     if (isTransitioning) return;
     isTransitioning = true;
-    await playDoor('close', DOOR_CLOSE_MS);
+    await playDoor('close', isFlatIdentify() ? 200 : DOOR_CLOSE_MS);
     identify.classList.remove('show');
     archive.classList.remove('away');
     menu.classList.add('hidden');
@@ -1390,11 +1449,11 @@
     isTransitioning = false;
   }
 
-  archiveBack.addEventListener('click', leaveArchive);
-  $('choose-analog').addEventListener('click', chooseAnalog);
-  $('choose-algo').addEventListener('click', chooseAlgorithm);
+  archiveBack.addEventListener('click', backToChoice);
+  $('choose-analog').addEventListener('click', function () { chooseAnalog(false); });
+  $('choose-algo').addEventListener('click', function () { chooseAlgorithm(false); });
   $('to-archive').addEventListener('click', goToArchive);
-  $('id-back').addEventListener('click', goToChoice);
+  $('id-back').addEventListener('click', backToChoice);
 
   /* ---------- АРХИВ: выбор фильма и фото ---------- */
 
@@ -2359,6 +2418,8 @@
   }
 
   function syncInk() {
+    var sbw = (archive.offsetWidth - archive.clientWidth) + 'px';
+    if (inkIdLayer.style.right !== sbw) { inkIdLayer.style.right = sbw; inkLayer.style.right = sbw; }
     inkPairs.forEach(function (pair) {
       copyAttrs(pair[0], pair[1]);
       mirror(pair[0], pair[1]);
