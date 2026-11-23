@@ -48,16 +48,20 @@
   /* ---------- АРХИВ (заставка, выбор, фото) ---------- */
 
   #archive { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; }
-  #archive.away > :not(#light-source):not(#identify):not(#ink-id) { display: none !important; }
+  #archive.away > :not(#light-source):not(#identify):not(#contacts):not(#ink-id) { display: none !important; }
   #archive > #selection-menu.closing, #archive > #selection-menu.closing * { color: transparent !important; border-color: transparent !important; }
 
   #ink-id {
     position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0; overflow: hidden;
     clip-path: polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%);
   }
+  #ink-id .ink-identify { position: absolute; top: 0; left: 0; width: 100%; }
   #ink-id, #ink-id * { pointer-events: none !important; }
   #ink-id * { color: #000 !important; border-color: #000 !important; background: transparent !important; text-decoration-color: #000 !important; }
   #ink-id .bar i, #ink-id .mini i { background: #000 !important; }
+  #ink-id .big-btn.mirror-hover, #ink-id .btn.mirror-hover { text-decoration: underline; background: transparent; }
+  #ink-id .archive-wrap.mirror-hover .archive-note { max-height: 400px; opacity: 1; margin-top: 12px; }
+  #ink-id .upload-wrap.mirror-hover .upload-note { max-height: 200px; opacity: 1; margin-top: 12px; }
 
   #ink {
     position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0;
@@ -231,7 +235,7 @@
     font: inherit; font-size: 1.12rem; letter-spacing: .12em; text-transform: uppercase;
     text-align: center; text-decoration: none; cursor: pointer; transition: background .18s, color .18s;
   }
-  .big-btn:hover, .big-btn:focus-visible { background: transparent; color: inherit; text-decoration: underline; }
+  .big-btn:hover, .big-btn:focus-visible { background: #ff0000; color: #000; }
   :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
   .archive-wrap { align-self: flex-start; margin-bottom: 20px; }
@@ -257,7 +261,7 @@
     border: 1px solid currentColor; font: inherit; font-size: .8rem; text-align: center;
     letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: background .18s, color .18s;
   }
-  .btn:hover:not(:disabled), .btn.on { background: transparent; color: inherit; text-decoration: underline; }
+  .btn:hover:not(:disabled), .btn.on { background: #ff0000; color: #000; }
   .btn:disabled { opacity: .35; cursor: default; }
   #id-back { position: absolute; top: 20px; right: 20px; }
 
@@ -342,9 +346,10 @@
     .choice-desc { font-size: .9rem; }
     .film-btn { padding: 10px 15px; font-size: .88rem; }
     #go-back { bottom: max(16px, env(safe-area-inset-bottom)); }
-    #identify, .ink-identify { padding: 20px 14px 56px; }
+    #identify, .ink-identify { padding: 72px 14px 56px; }
     .big-btn { width: 100%; max-width: 330px; font-size: 1rem; padding: 16px 18px; }
-    .archive-wrap { align-self: center; }
+    .archive-wrap { align-self: stretch; width: 100%; }
+    #id-back { top: 16px; right: 14px; }
     .archive-note, .upload-note { font-size: .95rem; }
     .frame { flex: 0 0 84%; min-height: 230px; padding: 28px 16px; }
     .frame p { font-size: 1.05rem; }
@@ -2292,11 +2297,19 @@
   var inkIdLayer = document.createElement('div');
   inkIdLayer.id = 'ink-id';
   inkIdLayer.setAttribute('aria-hidden', 'true');
-  var inkIdRoot = identify.cloneNode(true);
-  inkIdRoot.removeAttribute('id');
-  inkIdRoot.className = 'ink-identify';
-  inkIdLayer.appendChild(inkIdRoot);
+  var inkIdRoot = null;
+  function buildIdInk() {
+    var fresh = identify.cloneNode(true);
+    fresh.removeAttribute('id');
+    fresh.className = 'ink-identify';
+    if (inkIdRoot) inkIdLayer.replaceChild(fresh, inkIdRoot);
+    else inkIdLayer.appendChild(fresh);
+    inkIdRoot = fresh;
+  }
+  buildIdInk();
   archive.appendChild(inkIdLayer);
+
+
 
   function sameShape(a, b) {
     if (a.nodeName !== b.nodeName || a.childNodes.length !== b.childNodes.length) return false;
@@ -2337,6 +2350,7 @@
     var identifyShown = identify.classList.contains('show');
     inkIdRoot.style.display = identifyShown ? '' : 'none';
     if (identifyShown) {
+      if (!sameShape(identify, inkIdRoot)) buildIdInk();
       mirror(identify, inkIdRoot);
       inkIdRoot.style.transform = 'translateY(' + (-archive.scrollTop) + 'px)';
     }
