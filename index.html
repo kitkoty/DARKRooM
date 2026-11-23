@@ -48,7 +48,16 @@
   /* ---------- АРХИВ (заставка, выбор, фото) ---------- */
 
   #archive { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; }
-  #archive.away > :not(#light-source):not(#identify):not(#contacts) { display: none !important; }
+  #archive.away > :not(#light-source):not(#identify):not(#ink-id) { display: none !important; }
+  #archive > #selection-menu.closing, #archive > #selection-menu.closing * { color: transparent !important; border-color: transparent !important; }
+
+  #ink-id {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0; overflow: hidden;
+    clip-path: polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%);
+  }
+  #ink-id, #ink-id * { pointer-events: none !important; }
+  #ink-id * { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+  #ink-id .bar i, #ink-id .mini i { background: #000 !important; }
 
   #ink {
     position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0;
@@ -58,6 +67,7 @@
   #ink, #ink * { pointer-events: none !important; }
   #ink .logo-line { text-shadow: -4px 6px 6px rgba(0, 0, 0, .35) !important; filter: none !important; }
   #ink * { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+  #ink .choice-word.mirror-hover { text-decoration: underline; }
   #ink .mirror-hover .tip { display: block; }
 
   #hero-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
@@ -189,7 +199,7 @@
   @keyframes photoAppear { from { opacity: 0; transform: scale(.9) rotate(-2deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
 
   #contacts {
-    position: fixed; right: 20px; bottom: 18px; width: min(340px, calc(100vw - 40px));
+    position: fixed; right: 20px; bottom: 18px; width: max-content; max-width: min(300px, 62vw);
     padding-top: 12px; border-top: 1px solid #ff0000; color: #ff0000;
     font-family: 'MuseoModerno', sans-serif; font-size: .85rem; line-height: 1.6; text-align: right;
     opacity: 0; transition: opacity .6s ease;
@@ -204,12 +214,13 @@
 
   /* ---------- ИДЕНТИФИКАТОР ---------- */
 
-  #identify {
+  #identify, .ink-identify {
     position: relative; min-height: 100vh; display: none; flex-direction: column; align-items: center;
     padding: clamp(24px, 5vw, 64px) clamp(14px, 4vw, 20px) clamp(48px, 8vh, 80px);
     color: #ff0000;
   }
   #identify.show { display: flex; }
+  .ink-identify { display: flex; }
 
 
 
@@ -331,7 +342,7 @@
     .choice-desc { font-size: .9rem; }
     .film-btn { padding: 10px 15px; font-size: .88rem; }
     #go-back { bottom: max(16px, env(safe-area-inset-bottom)); }
-    #identify { padding: 20px 14px 56px; }
+    #identify, .ink-identify { padding: 20px 14px 56px; }
     .big-btn { width: 100%; max-width: 330px; font-size: 1rem; padding: 16px 18px; }
     .archive-wrap { align-self: center; }
     .archive-note, .upload-note { font-size: .95rem; }
@@ -1064,8 +1075,7 @@
   var archiveBack = $('archive-back');
 
   var doorClip = DOOR_OPEN_CLIP;
-  var doorAnim = null;
-  var inkAnim = null;
+  var doorAnims = [];
   var inkLayer = $('ink');
   var menuFadeFrame = null;
   var isTransitioning = false;
@@ -1075,7 +1085,7 @@
   var photoIndex = 0;
 
   function playDoor(kind, duration) {
-    if (doorAnim) { doorAnim.cancel(); inkAnim.cancel(); }
+    doorAnims.forEach(function (a) { a.cancel(); });
     var target = kind === 'close' ? DOOR_CLOSED_CLIP : (kind === 'half' ? DOOR_HALF_CLIP : DOOR_OPEN_CLIP);
     var frames;
     if (kind === 'close') {
@@ -1090,19 +1100,27 @@
         { opacity: 1, clipPath: target }
       ];
     }
-    var options = {
-      duration: duration,
-      easing: kind === 'close' ? DOOR_CLOSE_EASING : DOOR_EASING,
-      fill: 'forwards'
-    };
     var inkFrames = frames.map(function (f) {
       var g = {};
       for (var k in f) if (k !== 'filter') g[k] = f[k];
       return g;
     });
-    doorAnim = lightSource.animate(frames, options);
-    inkAnim = inkLayer.animate(inkFrames, options);
-    return doorAnim.finished.then(function () { doorClip = target; }, function () {});
+    var options = {
+      duration: duration,
+      easing: kind === 'close' ? DOOR_CLOSE_EASING : DOOR_EASING,
+      fill: 'forwards'
+    };
+    doorAnims = [
+      lightSource.animate(frames, options),
+      inkLayer.animate(inkFrames, options),
+      inkIdLayer.animate(inkFrames, options)
+    ];
+    return doorAnims[0].finished.then(function () { doorClip = target; }, function () {});
+  }
+
+  function fadeMenuOut() {
+    menu.classList.add('closing');
+    return fadeMenuTo(0, DOOR_CLOSE_MS);
   }
 
   function fadeMenuTo(target, duration) {
@@ -1122,6 +1140,7 @@
 
 
   function showMenu() {
+    menu.classList.remove('closing');
     menu.style.opacity = '0';
     menu.classList.remove('hidden');
     return fadeMenuTo(1, MENU_FADE_MS);
@@ -1142,7 +1161,7 @@
   async function changeStepWithDoor(swapStep) {
     isTransitioning = true;
     goBackButton.classList.add('hidden');
-    await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
+    await Promise.all([fadeMenuOut(), playDoor('close', DOOR_CLOSE_MS)]);
     menu.classList.add('hidden');
     swapStep();
     await wait(DOOR_DARK_PAUSE_MS);
@@ -1222,6 +1241,8 @@
     placePart(partA, edgePoint(sEndA - partA.offsetWidth, gap + partA.offsetHeight));
 
     var sStartB = (Kright + 1.8 * CM - topX) / ux;
+    var sMax = (W - 8 - partB.offsetWidth * ux + gap * uy - topX) / ux;
+    sStartB = Math.min(sStartB, sMax);
     placePart(partB, edgePoint(sStartB, -gap));
   }
 
@@ -1250,6 +1271,7 @@
 
   function hideChoice() {
     choice.classList.remove('show');
+    $('contacts').classList.remove('on');
   }
 
   async function startIntro() {
@@ -1302,6 +1324,8 @@
     archive.classList.add('away');
     identify.classList.add('show');
     archive.scrollTop = 0;
+    await wait(DOOR_DARK_PAUSE_MS);
+    await playDoor('open', DOOR_OPEN_FAST_MS);
     showIdentify();
     isTransitioning = false;
   }
@@ -1346,7 +1370,7 @@
     goBackButton.classList.add('hidden');
     addWrap.classList.add('hidden');
     clickPrompt.classList.add('hidden');
-    await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
+    await Promise.all([fadeMenuOut(), playDoor('close', DOOR_CLOSE_MS)]);
     menu.classList.add('hidden');
     archiveBack.classList.add('hidden');
     clearPhotos();
@@ -1437,7 +1461,7 @@
       photoIndex = 0;
       clearPhotos();
 
-      await Promise.all([fadeMenuTo(0, DOOR_CLOSE_MS), playDoor('close', DOOR_CLOSE_MS)]);
+      await Promise.all([fadeMenuOut(), playDoor('close', DOOR_CLOSE_MS)]);
       menu.classList.add('hidden');
       archiveBack.classList.add('hidden');
 
@@ -2265,15 +2289,57 @@
     return [src, clone];
   });
 
+  var inkIdLayer = document.createElement('div');
+  inkIdLayer.id = 'ink-id';
+  inkIdLayer.setAttribute('aria-hidden', 'true');
+  var inkIdRoot = identify.cloneNode(true);
+  inkIdRoot.removeAttribute('id');
+  inkIdRoot.className = 'ink-identify';
+  inkIdLayer.appendChild(inkIdRoot);
+  archive.appendChild(inkIdLayer);
+
+  function sameShape(a, b) {
+    if (a.nodeName !== b.nodeName || a.childNodes.length !== b.childNodes.length) return false;
+    for (var i = 0; i < a.childNodes.length; i++) {
+      if (a.childNodes[i].nodeType !== b.childNodes[i].nodeType) return false;
+      if (a.childNodes[i].nodeType === 1 && !sameShape(a.childNodes[i], b.childNodes[i])) return false;
+    }
+    return true;
+  }
+
+  function copyAttrs(src, dst) {
+    var cls = ((src.getAttribute('class') || '') + (src.matches(':hover') ? ' mirror-hover' : '')).trim();
+    if ((dst.getAttribute('class') || '') !== cls) dst.setAttribute('class', cls);
+    var style = src.getAttribute('style');
+    if (style === null) { if (dst.hasAttribute('style')) dst.removeAttribute('style'); }
+    else if (dst.getAttribute('style') !== style) dst.setAttribute('style', style);
+    if (dst.scrollLeft !== src.scrollLeft) dst.scrollLeft = src.scrollLeft;
+    if (dst.scrollTop !== src.scrollTop) dst.scrollTop = src.scrollTop;
+  }
+
+  function copyDeep(a, b) {
+    if (a.nodeType === 3) { if (b.nodeValue !== a.nodeValue) b.nodeValue = a.nodeValue; return; }
+    if (a.nodeType !== 1) return;
+    copyAttrs(a, b);
+    for (var i = 0; i < a.childNodes.length; i++) copyDeep(a.childNodes[i], b.childNodes[i]);
+  }
+
+  function mirror(src, dst) {
+    if (!sameShape(src, dst)) { dst.innerHTML = src.innerHTML; return; }
+    for (var i = 0; i < src.childNodes.length; i++) copyDeep(src.childNodes[i], dst.childNodes[i]);
+  }
+
   function syncInk() {
     inkPairs.forEach(function (pair) {
-      var src = pair[0], clone = pair[1];
-      var cls = src.className + (src.matches(':hover') ? ' mirror-hover' : '');
-      if (clone.className !== cls) clone.className = cls;
-      var style = src.getAttribute('style') || '';
-      if ((clone.getAttribute('style') || '') !== style) clone.setAttribute('style', style);
-      if (clone.innerHTML !== src.innerHTML) clone.innerHTML = src.innerHTML;
+      copyAttrs(pair[0], pair[1]);
+      mirror(pair[0], pair[1]);
     });
+    var identifyShown = identify.classList.contains('show');
+    inkIdRoot.style.display = identifyShown ? '' : 'none';
+    if (identifyShown) {
+      mirror(identify, inkIdRoot);
+      inkIdRoot.style.transform = 'translateY(' + (-archive.scrollTop) + 'px)';
+    }
     window.requestAnimationFrame(syncInk);
   }
   syncInk();
