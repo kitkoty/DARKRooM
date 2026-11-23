@@ -18,9 +18,7 @@
 
   #light-source {
     position: fixed; inset: 0; z-index: 1; pointer-events: none;
-    clip-path: polygon(2cm 0, calc(2cm + 12% + 2cm) 0, 100% calc(100% - 6cm), 110% 115%, -10% 115%, 0 100%);
     background: #ff0000; opacity: 0;
-    animation: openDoor 3.1s cubic-bezier(.2, .72, .2, 1) 2s forwards;
     will-change: clip-path, opacity;
   }
   #light-source::before {
@@ -37,12 +35,6 @@
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 45%, #000 100%);
     mask-image: linear-gradient(to bottom, transparent 0%, #000 45%, #000 100%);
   }
-  @keyframes openDoor {
-    0% { opacity: 0; clip-path: polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%); }
-    15% { opacity: .55; clip-path: polygon(2cm 0, calc(2cm + 2%) 0, calc(2cm + 2%) 100%, 110% 115%, -10% 115%, 2cm 100%); }
-    45% { opacity: .88; clip-path: polygon(2cm 0, calc(2cm + 6%) 0, 100% calc(100% - 6cm), 110% 115%, -10% 115%, 0 100%); }
-    100% { opacity: 1; clip-path: polygon(2cm 0, calc(2cm + 12% + 2cm) 0, 100% calc(100% - 6cm), 110% 115%, -10% 115%, 0 100%); }
-  }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   /* ---------- АРХИВ (заставка, выбор, фото) ---------- */
@@ -53,7 +45,6 @@
 
   #ink-id {
     position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0; overflow: hidden;
-    clip-path: polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%);
   }
   #ink-id .ink-identify { position: absolute; top: 0; left: 0; width: 100%; }
   #ink-id, #ink-id * { pointer-events: none !important; }
@@ -66,8 +57,6 @@
 
   #ink {
     position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0;
-    clip-path: polygon(2cm 0, calc(2cm + .5%) 0, calc(2cm + .5%) 100%, 110% 115%, -10% 115%, 2cm 100%);
-    animation: openDoor 3.1s cubic-bezier(.2, .72, .2, 1) 2s forwards;
   }
   #ink, #ink * { pointer-events: none !important; }
   #ink .logo-line { text-shadow: -4px 6px 6px rgba(0, 0, 0, .35) !important; filter: none !important; }
@@ -1298,7 +1287,7 @@
     await wait(INTRO_LOGO_MS);
     hero.classList.add('shown');
     await wait(INTRO_DOOR_MS - INTRO_LOGO_MS);
-    await wait(DOOR_OPEN_CSS_MS);
+    await playDoor('open', DOOR_OPEN_CSS_MS);
     await typeTagline();
     await wait(1500);
 
@@ -2328,9 +2317,13 @@
     if (inkIdRoot) inkIdLayer.replaceChild(fresh, inkIdRoot);
     else inkIdLayer.appendChild(fresh);
     inkIdRoot = fresh;
+    fresh.style.transform = 'translateY(' + (-archive.scrollTop) + 'px)';
   }
   buildIdInk();
   archive.appendChild(inkIdLayer);
+  archive.addEventListener('scroll', function () {
+    inkIdRoot.style.transform = 'translateY(' + (-archive.scrollTop) + 'px)';
+  });
 
 
 
